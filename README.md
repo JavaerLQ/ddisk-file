@@ -1,4 +1,4 @@
-![网格视图](../../Desktop/README.assets/网格视图.png)
+![输入图片说明](https://images.gitee.com/uploads/images/2021/0410/050022_9ec81567_2098391.png "网格视图.png")
 
 ## 在线演示
 
@@ -64,13 +64,13 @@
 
 ### 视频播放
 
-![视频播放](../../Desktop/README.assets/视频播放.png)
+![视频播放](https://images.gitee.com/uploads/images/2021/0410/050042_0bc9d77a_2098391.png "视频播放.png")
 
 
 
 ### 图片预览
 
-![图片](../../Desktop/README.assets/图片.png)
+![图片预览](https://images.gitee.com/uploads/images/2021/0410/050152_9f2ee996_2098391.png "图片.png")
 
 
 
@@ -82,5 +82,5 @@
 
 希望有热心的同学可以共享一个logo，感激不尽！
 
-![qq群](../../Desktop/README.assets/qq群.png)
+![QQ群](https://images.gitee.com/uploads/images/2021/0410/050213_584de85f_2098391.png "qq群.png")
 
