@@ -123,7 +123,7 @@ public class FileController {
 	@Operation(summary = "创建目录", description = "创建文件夹", tags = {"file"})
 	@PostMapping(value = "/mkdir")
 	@Parameters({
-			@Parameter(name = "pid", description = "父目录id", required = true),
+			@Parameter(name = "pid", description = "父目录id", required = false),
 			@Parameter(name = "name", description = "目录名", required = true),
 
 	})

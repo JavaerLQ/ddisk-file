@@ -20,6 +20,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Min;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 
@@ -51,7 +53,7 @@ public class FileTransferController {
     public ResponseEntity<UploadFileVO> uploadChunk(@Validated FileUploadDTO fileUploadDto) {
 
         LoginUser user = SpringWebUtils.requireLogin();
-        Set<Integer> upload = fileService.upload(user.getId(), fileUploadDto);
+        Collection<Integer> upload = fileService.upload(user.getId(), fileUploadDto);
         return ResponseEntity.ok().body(UploadFileVO.builder().needMerge(upload.size()==fileUploadDto.getTotalChunks()).uploaded(upload).build());
     }
 

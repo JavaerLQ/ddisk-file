@@ -25,9 +25,6 @@ public class FileUploadDTO {
     @Schema(description = "扩展名")
     private String extension;
 
-    @Schema(description = "文件大小")
-    private Long fileSize;
-
     @Min(0)
     @Schema(description = "切片数量")
     private Integer chunkNumber;

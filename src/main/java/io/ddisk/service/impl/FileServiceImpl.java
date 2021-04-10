@@ -33,9 +33,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -66,7 +64,6 @@ public class FileServiceImpl implements FileService {
 	@Override
 	public UploadFileVO speedUpload(Long userId, FileUploadDTO fileUploadDTO) {
 
-		userStorageService.hasSize(fileUploadDTO.getFileSize());
 		FileEntity fileEntity = fileRepository.findById(fileUploadDTO.getIdentifier()).orElse(null);
 
 		// 如果存在，保存到该用户的用户文件夹
@@ -92,9 +89,8 @@ public class FileServiceImpl implements FileService {
 	 * @return 返回已上传过的切片
 	 */
 	@Override
-	public Set<Integer> upload(Long userId, FileUploadDTO fileUploadDTO) {
+	public Collection<Integer> upload(Long userId, FileUploadDTO fileUploadDTO) {
 
-		userStorageService.hasSize(fileUploadDTO.getFileSize());
 		List<ChunkEntity> chunks = chunkRepository.findAllByIdentifier(fileUploadDTO.getIdentifier());
 		Set<Integer> uploaded = chunks.parallelStream().map(ChunkEntity::getChunkNumber).collect(Collectors.toSet());
 		// 该切片已上传过

@@ -7,6 +7,8 @@ import io.ddisk.domain.entity.FileEntity;
 import io.ddisk.domain.enums.RoleEnum;
 import io.ddisk.domain.vo.UploadFileVO;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,7 +30,7 @@ public interface FileService {
 	 * @param fileUploadDTO
 	 * @return 返回已上传过的切片
 	 */
-	Set<Integer> upload(Long userId, FileUploadDTO fileUploadDTO);
+	Collection<Integer> upload(Long userId, FileUploadDTO fileUploadDTO);
 
 	/**
 	 * 合并已上传切片，返回合并后的FileEntity

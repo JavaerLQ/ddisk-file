@@ -1,10 +1,12 @@
 package io.ddisk.domain.vo;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
 import java.util.Collection;
+
 
 /**
  * @Author: Richard.Lee
@@ -19,6 +21,7 @@ public class UploadFileVO {
 	private Boolean needMerge;
 	@Schema(description = "跳过上传", example = "true")
 	private Boolean skipUpload;
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	@Schema(description = "已经上传的分片", example = "[1,2,3]")
 	private Collection<Integer> uploaded;
 }
