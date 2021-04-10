@@ -39,6 +39,19 @@ public class UserStorageServiceImpl implements UserStorageService {
 
 
 	/**
+	 * 用户必须已登录，用户能否装下size大小的文件，不能则抛出异常
+	 *
+	 * @param size
+	 */
+	@Override
+	public void hasSize(Long size) {
+		UserStorageVO info = getStorageInfo();
+		if(info.getUsedStorage()+size > info.getMaxStorage()){
+			throw new BizException(BizMessage.USED_STORAGE_OUT_OF_MAX);
+		}
+	}
+
+	/**
 	 * 用户必须已登录
 	 * 获取用户的存储空间使用信息
 	 */

@@ -2,6 +2,9 @@ HELP.md
 target/
 upload/
 
+### 演示环境配置 ###
+src/main/resources/application-qa.properties
+
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

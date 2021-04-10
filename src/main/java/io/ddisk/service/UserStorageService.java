@@ -13,7 +13,11 @@ import java.util.List;
 public interface UserStorageService {
 
 
-
+	/**
+	 * 用户必须已登录，用户能否装下size大小的文件，不能则抛出异常
+	 * @param size
+	 */
+	void hasSize(Long size);
 	/**
 	 * 用户必须已登录
 	 * 获取用户的存储空间使用信息
