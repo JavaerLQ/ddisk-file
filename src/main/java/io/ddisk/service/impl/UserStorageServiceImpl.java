@@ -182,7 +182,7 @@ public class UserStorageServiceImpl implements UserStorageService {
 		userFileEntityList.forEach(userFileEntity -> {
 			size.addAndGet(Optional.ofNullable(fileSizeMap.get(userFileEntity.getFileId())).orElse(0L));
 		});
-		if (isDelete) {
+		if (!isDelete) {
 			increaseStorage(size.get());
 		} else {
 			decreaseStorage(size.get());
