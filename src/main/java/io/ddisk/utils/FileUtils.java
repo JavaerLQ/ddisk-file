@@ -2,7 +2,6 @@ package io.ddisk.utils;
 
 import io.ddisk.domain.dto.FileUploadDTO;
 import io.ddisk.domain.enums.FileTypeEnum;
-import io.ddisk.domain.enums.ImageSizeEnum;
 import io.ddisk.exception.BizException;
 import io.ddisk.exception.msg.BizMessage;
 import io.vavr.control.Try;
@@ -20,7 +19,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 import static io.ddisk.domain.consts.FileConst.*;
 
@@ -43,93 +45,8 @@ public class FileUtils {
 				() -> Optional.ofNullable(fileUploadDTO.getFile())
 						.map(file -> Try.of(file::getInputStream).getOrElseThrow(() -> new BizException(BizMessage.UPLOAD_FILE_STREAM_FAIL)))
 						.orElseThrow(() -> new BizException(BizMessage.UPLOAD_FILE_NULL)),
-				() -> new FileOutputStream(getChunkPath(fileUploadDTO).toFile())
+				() -> new FileOutputStream(PathUtils.getChunkFilePath(fileUploadDTO).toFile())
 		).of(FileCopyUtils::copy).getOrElseThrow(() -> new BizException(BizMessage.FILE_COPY_FAIL));
-	}
-
-
-	/**
-	 * 获取文件切片目录
-	 * @param identifier
-	 * @return
-	 */
-	public static Path getChunkFolder(String identifier){
-		return Path.of(UPLOAD_FOLDER, CHUNK_PATH, identifier);
-	}
-
-	/**
-	 * 拿到切片文件路径
-	 *
-	 * @param fileUploadDTO
-	 * @return
-	 */
-	public static Path getChunkPath(FileUploadDTO fileUploadDTO) {
-
-		Path path = Path.of(
-				UPLOAD_FOLDER,
-				CHUNK_PATH,
-				fileUploadDTO.getIdentifier(),
-				fileUploadDTO.getChunkNumber().toString()
-		);
-		return mkdirs(path, false);
-	}
-
-	/**
-	 * 获取文件路径，文件路径规则：文件上传路径/文件类型/文件唯一标识
-	 * @return
-	 */
-	public static Path getFilePath(String mimetype, String identifier) {
-
-		Path path = Path.of(UPLOAD_FOLDER, mimetype, identifier);
-		return mkdirs(path, false);
-	}
-
-
-	/**
-	 * 获取略缩图文件基础文件名
-	 */
-	public static Path getThumbnailBaseName(String identifier, ImageSizeEnum sizeEnum){
-		String filename = String.format("%s_%dx%d", identifier, sizeEnum.getWidth(), sizeEnum.getHeight());
-		return Path.of(UPLOAD_FOLDER, UPLOAD_FOLDER, filename);
-	}
-
-	/**
-	 * 获取略缩图文件路径
-	 */
-	public static Path getThumbnailPath(String identifier, String extension, ImageSizeEnum sizeEnum){
-		String filename = String.format("%s_%dx%d.%s", identifier, sizeEnum.getWidth(), sizeEnum.getHeight(), extension);
-		Path path = Path.of(UPLOAD_FOLDER, THUMBNAIL_PATH, filename);
-		return mkdirs(path, false);
-	}
-
-	/**
-	 * 创建失败抛出异常，存在或者创建成功返回路径
-	 *
-	 * @param path
-	 * @param isDir 是否是目录
-	 * @return
-	 */
-	public static Path mkdirs(Path path, boolean isDir) {
-		Path tmp = isDir ? path : path.getParent();
-		if (Files.notExists(tmp)) {
-			Try.of(() -> Files.createDirectories(tmp)).getOrElseThrow(() -> {
-				log.error("目录创建失败[{}]", tmp);
-				throw new BizException(BizMessage.DIR_CREATE_FAIL);
-			});
-		}
-		log.info("创建目录[{}]", tmp.getFileName());
-		return path;
-	}
-
-	/**
-	 * 递归删除
-	 *
-	 * @param path
-	 * @return
-	 */
-	public static boolean deleteRecursively(Path path) {
-		log.info("删除文件[{}]", path.getFileName());
-		return Try.of(() -> FileSystemUtils.deleteRecursively(path)).getOrElseThrow(() -> new BizException(BizMessage.FILE_DELETE_RECURSIVELY));
 	}
 
 	/**
@@ -155,6 +72,36 @@ public class FileUtils {
 		return outPath;
 	}
 
+	/**
+	 * 创建失败抛出异常，存在或者创建成功返回路径
+	 *
+	 * @param path
+	 * @param isDir 是否是目录
+	 * @return
+	 */
+	public static Path mkdirs(Path path, boolean isDir) {
+
+		Path tmp = isDir ? path : path.getParent();
+		if (Files.notExists(tmp)) {
+			Try.of(() -> Files.createDirectories(tmp)).getOrElseThrow(() -> {
+				log.error("目录创建失败[{}]", tmp);
+				throw new BizException(BizMessage.DIR_CREATE_FAIL);
+			});
+			log.info("创建目录[{}]", tmp.getFileName());
+		}
+		return path;
+	}
+
+	/**
+	 * 递归删除
+	 *
+	 * @param path
+	 * @return
+	 */
+	public static boolean deleteRecursively(Path path) {
+		log.info("删除文件[{}]", path.getFileName());
+		return Try.of(() -> FileSystemUtils.deleteRecursively(path)).getOrElseThrow(() -> new BizException(BizMessage.FILE_DELETE_RECURSIVELY));
+	}
 
 	/**
 	 * 获取一个文件的md5值(可处理大文件)
@@ -162,7 +109,6 @@ public class FileUtils {
 	 */
 	public static String md5(Path filePath) {
 
-		Long totalSize = size(filePath);
 		try(FileInputStream fileInputStream = new FileInputStream(filePath.toFile())) {
 			MessageDigest MD5 = MessageDigest.getInstance("MD5");
 			byte[] buffer = new byte[Math.toIntExact(CHUNK_SIZE)];
@@ -170,7 +116,7 @@ public class FileUtils {
 			while ((length = fileInputStream.read(buffer)) != -1) {
 				MD5.update(buffer, 0, length);
 			}
-			return new String(HexUtils.toHexString(MD5.digest()));
+			return HexUtils.toHexString(MD5.digest());
 		} catch (Exception e) {
 			throw new BizException(BizMessage.FILE_MD5_COMPUTE_FAIL);
 		}

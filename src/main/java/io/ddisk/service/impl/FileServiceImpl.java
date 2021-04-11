@@ -21,6 +21,7 @@ import io.ddisk.service.FileService;
 import io.ddisk.service.UserStorageService;
 import io.ddisk.utils.FileUtils;
 import io.ddisk.utils.ImageUtils;
+import io.ddisk.utils.PathUtils;
 import io.ddisk.utils.SpringWebUtils;
 import jodd.io.FileNameUtil;
 import jodd.net.MimeTypes;
@@ -135,14 +136,14 @@ public class FileServiceImpl implements FileService {
 
 		// 合并后文件路径
 		Path fromPath = FileUtils.mergeFile(
-				FileUtils.getChunkFolder(chunks.get(0).getIdentifier()),
+				PathUtils.getChunkDirPath(chunks.get(0).getIdentifier()),
 				chunks.get(0).getTotalChunks()
 		);
 
 		// 获取文件基本信息
 		String md5 = FileUtils.md5(fromPath);
 		String mimetype = FileUtils.mimetype(fromPath, mergeFileDTO.getFilename());
-		Path toPath = FileUtils.getFilePath(mimetype, md5);
+		Path toPath = PathUtils.getFilePath(mimetype, md5);
 
 		// 与前端提供的md5不一致，代表合并失败
 		if (!md5.equals(mergeFileDTO.getIdentifier())) {
@@ -266,7 +267,7 @@ public class FileServiceImpl implements FileService {
 
 		ThumbnailEntity thumbnail = thumbnailRepository.findByFileIdAndImageSize(userFileEntity.getFileId(), ImageSizeEnum.MIN).orElseGet(() -> {
 			FileEntity fileEntity = fileRepository.findById(userFileEntity.getFileId()).orElseThrow(() -> new BizException(BizMessage.FILE_NOT_EXIST));
-			Path out = FileUtils.getThumbnailPath(fileEntity.getId(), userFileEntity.getExtension(), ImageSizeEnum.MIN);
+			Path out = PathUtils.getThumbnailFilePath(fileEntity.getId(), userFileEntity.getExtension(), ImageSizeEnum.MIN);
 			ImageUtils.generateMin(new File(fileEntity.getUrl()), out.toFile());
 			ThumbnailEntity thumbnailEntity = new ThumbnailEntity(fileEntity.getId(), out.toString(), ImageSizeEnum.MIN, FileUtils.size(out));
 			return thumbnailRepository.save(thumbnailEntity);

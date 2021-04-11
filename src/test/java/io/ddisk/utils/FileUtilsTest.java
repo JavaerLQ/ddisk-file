@@ -30,7 +30,7 @@ class FileUtilsTest {
 		dto.setFile(file);
 
 		FileUtils.chunk(dto);
-		Path chunkPath = FileUtils.getChunkPath(dto);
+		Path chunkPath = PathUtils.getChunkFilePath(dto);
 		assertTrue(Files.deleteIfExists(chunkPath));
 
 		// 清理垃圾

@@ -7,6 +7,7 @@ import io.ddisk.domain.entity.UserFileEntity;
 import io.ddisk.domain.entity.UserStorageEntity;
 import io.ddisk.service.FileCleanerService;
 import io.ddisk.utils.FileUtils;
+import io.ddisk.utils.PathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +46,7 @@ public class FileCleanerServiceImpl implements FileCleanerService {
 	@Override
 	public void cleanMergedFiles() {
 		List<String> mergedFileId = chunkRepository.findMergedFiles();
-		mergedFileId.forEach(fileId-> FileUtils.deleteRecursively(FileUtils.getChunkFolder(fileId)));
+		mergedFileId.forEach(fileId-> FileUtils.deleteRecursively(PathUtils.getChunkDirPath(fileId)));
 	}
 
 	/**
@@ -56,7 +57,7 @@ public class FileCleanerServiceImpl implements FileCleanerService {
 		// 默认清理1周前的碎片
 		Date date = Date.from(LocalDate.now().minusWeeks(1L).atStartOfDay(ZoneId.systemDefault()).toInstant());
 		List<String> fileIds = chunkRepository.findIncompleteChunksDateBefore(date);
-		fileIds.forEach(id->FileUtils.deleteRecursively(FileUtils.getChunkFolder(id)));
+		fileIds.forEach(id->FileUtils.deleteRecursively(PathUtils.getChunkDirPath(id)));
 		chunkRepository.deleteAllByIdentifierIn(fileIds);
 	}
 
