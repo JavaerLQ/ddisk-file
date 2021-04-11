@@ -65,7 +65,7 @@ public class UserEntity implements Serializable {
 	 * 注册时间
 	 */
 	@Column(name = "user_register_time", nullable = false)
-	@Temporal(TemporalType.DATE)
+	@Temporal(TemporalType.TIMESTAMP)
 	private Date registerTime;
 
 	/**
