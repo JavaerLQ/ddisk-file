@@ -7,17 +7,26 @@ import io.ddisk.domain.dto.FileDTO;
 import io.ddisk.exception.BizException;
 import io.ddisk.exception.msg.BizMessage;
 import io.vavr.control.Try;
+import jodd.util.CollectionUtil;
 import jodd.util.StringPool;
+import jodd.util.StringUtil;
+import nonapi.io.github.classgraph.fileslice.reader.RandomAccessByteBufferReader;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.DigestUtils;
+import org.springframework.util.StreamUtils;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Author: Richard.Lee
@@ -56,18 +65,21 @@ public class ResponseUtils {
 				ServletOutputStream out = response.getOutputStream()
 		) {
 			response.setContentType(fileDTO.getContextType());
+			response.setContentLengthLong(fileDTO.getSize());
 			response.setHeader("Content-Disposition", String.format("attachment;fileName=%s", fileDTO.getFullName()));
+			long start = 0, end = fileDTO.getSize();
 			try{
 				//如果是video标签发起的请求就不会为null
 				String rangeString = request.getHeader("Range");
-				long range = Long.parseLong(rangeString.substring(rangeString.indexOf("=") + 1, rangeString.indexOf("-")));
-				//10000是视频文件的大小，上传文件时都会有这些参数的
-				response.setContentLengthLong(fileDTO.getSize());
+				start = Long.parseLong(rangeString.substring(rangeString.indexOf("=") + 1, rangeString.indexOf("-")));
 				//拖动进度条时的断点
-				response.setHeader("Content-Range", String.format("bytes %d-%d", range, fileDTO.getSize()));
+				response.setHeader("Content-Range", String.format("bytes %d-%d/%d", start, end, fileDTO.getSize()));
 				response.setHeader("Accept-Ranges", "bytes");
+				String etag = DigestUtils.md5DigestAsHex((SpringWebUtils.getRequestUser()+fileDTO.getUrl()).getBytes(StandardCharsets.UTF_8));
+				response.setHeader("Etag", "W/"+etag);
 			}catch (Exception ignore){}
-			IOUtils.copy(in, out);
+			StreamUtils.copy(in, out);
+			response.flushBuffer();
 		} catch (IOException e) {
 			throw new BizException(BizMessage.FILE_DOWNLOAD_FAIL, e.getCause());
 		}

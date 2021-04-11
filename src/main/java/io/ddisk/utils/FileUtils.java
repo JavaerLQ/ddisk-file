@@ -201,28 +201,6 @@ public class FileUtils {
 	}
 
 	/**
-	 * 获取文件全名
-	 * @param filename
-	 * @param extension
-	 * @return
-	 */
-	public static String getFileName(String filename, String extension){
-		return String.format("%s.%s", filename, extension);
-	}
-
-
-	/**
-	 * 获取文件全名
-	 * @param basePath
-	 * @param filename
-	 * @param extension
-	 * @return
-	 */
-	public static String getFileName(String basePath, String filename, String extension){
-		return Path.of(basePath, String.format("%s.%s", filename, extension)).toString();
-	}
-
-	/**
 	 * 移动或者重命名
 	 */
 	public static void move(Path from, Path to){
@@ -268,10 +246,5 @@ public class FileUtils {
 				break;
 		}
 		return set;
-	}
-
-	public static Boolean isMediaFile(String mimetype){
-		mimetype = mimetype.toLowerCase(Locale.ROOT);
-		return mimetype.startsWith("audio") || mimetype.startsWith("video");
 	}
 }

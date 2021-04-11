@@ -274,7 +274,7 @@ public class FileServiceImpl implements FileService {
 
 		return new FileDTO(
 				FileNameUtil.getName(thumbnail.getUrl()),
-				MimeTypes.getMimeType(userFileEntity.getExtension()),
+				thumbnail.getFileSize(),
 				thumbnail.getUrl()
 		);
 	}
