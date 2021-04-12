@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.ddisk.domain.dto.FileDTO;
+import io.ddisk.domain.vo.LoginUser;
 import io.ddisk.exception.BizException;
 import io.ddisk.exception.msg.BizMessage;
 import io.vavr.control.Try;
@@ -20,6 +21,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @Author: Richard.Lee
@@ -51,42 +53,7 @@ public class ResponseUtils {
 	 * 发送文件至客户端, 支持视频拖拽，断点续传
 	 */
 	public static void sendFile(FileDTO fileDTO) {
-		HttpServletRequest request = SpringWebUtils.getRequest();
-		HttpServletResponse response = SpringWebUtils.getResponse();
-		try (
-				FileInputStream in = new FileInputStream(fileDTO.getUrl());
-				ServletOutputStream out = response.getOutputStream()
-		) {
-			//浏览器设置
-			String userAgent = request.getHeader("User-Agent");
-			String filename = fileDTO.getFullName();
-			if (userAgent.contains("MSIE") || userAgent.contains("Trident")) {
-				//IE浏览器处理
-				filename = java.net.URLEncoder.encode(filename, StandardCharsets.UTF_8);
-			} else {
-				// 非IE浏览器的处理：
-				filename = new String(filename.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
-			}
-			response.setContentType(fileDTO.getContextType());
-			response.setContentLengthLong(fileDTO.getSize());
-			response.setHeader("Content-Disposition", String.format("attachment;fileName=%s", filename));
-			try {
-				long start = 0, end = fileDTO.getSize();
-				//如果是video标签发起的请求就不会为null
-				String rangeString = request.getHeader("Range");
-				start = Long.parseLong(rangeString.substring(rangeString.indexOf("=") + 1, rangeString.indexOf("-")));
-				//拖动进度条时的断点
-				response.setHeader("Content-Range", String.format("bytes %d-%d/%d", start, end, fileDTO.getSize()));
-				response.setHeader("Accept-Ranges", "bytes");
-				String etag = DigestUtils.md5DigestAsHex((SpringWebUtils.getRequestUser() + fileDTO.getUrl()).getBytes(StandardCharsets.UTF_8));
-				response.setHeader("Etag", "W/" + etag);
-			} catch (Exception ignore) {
-			}
-			StreamUtils.copy(in, out);
-			response.flushBuffer();
-		} catch (IOException e) {
-			throw new BizException(BizMessage.FILE_DOWNLOAD_FAIL, e.getCause());
-		}
+		FileUtils.chunkDownload(fileDTO);
 	}
 
 	public static class BodyBuilder {

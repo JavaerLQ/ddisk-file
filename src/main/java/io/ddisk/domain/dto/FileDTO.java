@@ -5,7 +5,6 @@ import jodd.util.StringUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.util.MimeTypeUtils;
 
 import javax.activation.MimetypesFileTypeMap;
 import java.util.Objects;
@@ -21,7 +20,7 @@ public class FileDTO {
 
 	private String fileName;
 	private String extension;
-	private String contextType;
+	private String contentType;
 	private String url;
 	private Long size;
 
@@ -31,15 +30,15 @@ public class FileDTO {
 		this.url = url;
 	}
 
-	public String getContextType() {
-		if (Objects.nonNull(contextType)){
-			return contextType;
+	public String getContentType() {
+		if (Objects.nonNull(contentType)){
+			return contentType;
 		}
-		contextType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(getFullName());
-		if (MimeTypes.MIME_APPLICATION_OCTET_STREAM.equals(contextType)){
-			contextType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(url);
+		contentType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(getFullName());
+		if (MimeTypes.MIME_APPLICATION_OCTET_STREAM.equals(contentType)){
+			contentType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(url);
 		}
-		return contextType;
+		return contentType;
 	}
 
 	public String getFullName(){
