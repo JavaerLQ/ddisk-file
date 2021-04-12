@@ -47,6 +47,7 @@ public class FileCleanerServiceImpl implements FileCleanerService {
 	public void cleanMergedFiles() {
 		List<String> mergedFileId = chunkRepository.findMergedFiles();
 		mergedFileId.forEach(fileId-> FileUtils.deleteRecursively(PathUtils.getChunkDirPath(fileId)));
+		chunkRepository.deleteAllByIdentifierIn(mergedFileId);
 	}
 
 	/**
