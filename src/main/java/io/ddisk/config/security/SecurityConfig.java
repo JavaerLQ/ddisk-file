@@ -5,6 +5,7 @@ import io.ddisk.domain.vo.base.ErrorVO;
 import io.ddisk.exception.msg.BaseMessage;
 import io.ddisk.exception.msg.BizMessage;
 import io.ddisk.utils.ResponseUtils;
+import io.ddisk.utils.SpringWebUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -70,7 +71,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 					// 登录成功
 					LoginUser user = (LoginUser) authentication.getPrincipal();
 					WebAuthenticationDetails details = (WebAuthenticationDetails) authentication.getDetails();
-					log.info("用户登录成功[Username: {}, Role: {}, IP: {}]", user.getUsername(), user.getRole(), details.getRemoteAddress());
+					log.info("用户登录成功[Username: {}, Role: {}, IP: {}]", user.getUsername(), user.getRole(), SpringWebUtils.getRemoteAddr());
 					ResponseUtils.build(response).ok().write(authentication.getPrincipal()).send();
 				})
 				.failureHandler((request, response, exception) -> {
@@ -96,7 +97,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 					// 退出登录成功
 					LoginUser user = (LoginUser) authentication.getPrincipal();
 					WebAuthenticationDetails details = (WebAuthenticationDetails) authentication.getDetails();
-					log.info("用户注销成功[Username: {}, Role: {}, IP: {}]", user.getUsername(), user.getRole(), details.getRemoteAddress());
+					log.info("用户注销成功[Username: {}, Role: {}, IP: {}]", user.getUsername(), user.getRole(), SpringWebUtils.getRemoteAddr());
 					ResponseUtils.build(response).ok().write("注销成功！").send();
 				})
 				.and()

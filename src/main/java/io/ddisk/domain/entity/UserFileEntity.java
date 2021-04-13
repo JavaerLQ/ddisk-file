@@ -50,12 +50,6 @@ public class UserFileEntity implements Serializable {
 	private String extension;
 
 	/**
-	 * 文件是否公开，让其他人可以搜索
-	 */
-	@Column(name = "is_public", nullable = false)
-	private Boolean share;
-
-	/**
 	 * 所在目录，根目录为null
 	 */
 	@Column(name = "pid")
@@ -105,7 +99,6 @@ public class UserFileEntity implements Serializable {
 	public UserFileEntity(Long userId, String filename, String extension, Long pid, String fileId) {
 		this.userId = userId;
 		this.filename = filename;
-		this.share = false;
 		this.extension = extension;
 		this.pid = pid;
 		this.fileId = fileId;
@@ -125,7 +118,6 @@ public class UserFileEntity implements Serializable {
 	public UserFileEntity(Long userId, String filename, Long pid) {
 		this.userId = userId;
 		this.filename = filename;
-		this.share = false;
 		this.pid = pid;
 		this.fileId = null;
 		this.extension = null;

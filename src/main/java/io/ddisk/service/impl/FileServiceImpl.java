@@ -226,7 +226,7 @@ public class FileServiceImpl implements FileService {
 					if (uf.getDir()) {
 						throw new BizException(BizMessage.DIR_CAN_NOT_DOWNLOAD);
 					}
-					if (userId.equals(uf.getUserId()) || uf.getShare() || RoleEnum.ADMIN.equals(role)) {
+					if (userId.equals(uf.getUserId()) || RoleEnum.ADMIN.equals(role)) {
 						return uf;
 					}
 					throw new BizException(BizMessage.FILE_ILLEGAL_ACCESS);
