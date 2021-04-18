@@ -40,7 +40,7 @@ public class FileUtils {
 
     /**
      * 切片上传，切片文件命名规则：
-     * 文件上传路径/chunk/文件唯一标识/切片大小_第几切片
+     * 文件上传路径/chunk/文件唯一标识/切片大小/第几切片
      *
      * @param fileUploadDTO
      */
