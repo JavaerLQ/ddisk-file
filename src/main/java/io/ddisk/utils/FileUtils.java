@@ -1,6 +1,5 @@
 package io.ddisk.utils;
 
-import io.ddisk.domain.dto.FileDTO;
 import io.ddisk.domain.dto.FileUploadDTO;
 import io.ddisk.domain.enums.FileTypeEnum;
 import io.ddisk.domain.vo.LoginUser;
@@ -41,7 +40,7 @@ public class FileUtils {
 
     /**
      * 切片上传，切片文件命名规则：
-     * 文件上传路径/chunk/文件唯一标识/第几切片
+     * 文件上传路径/chunk/文件唯一标识/切片大小_第几切片
      *
      * @param fileUploadDTO
      */
@@ -51,31 +50,34 @@ public class FileUtils {
                 () -> Optional.ofNullable(fileUploadDTO.getFile())
                         .map(file -> Try.of(file::getInputStream).getOrElseThrow(() -> new BizException(BizMessage.UPLOAD_FILE_STREAM_FAIL)))
                         .orElseThrow(() -> new BizException(BizMessage.UPLOAD_FILE_NULL)),
-                () -> new FileOutputStream(PathUtils.getChunkFilePath(fileUploadDTO).toFile())
+                () -> new FileOutputStream(PathUtils.getChunkFilePath(fileUploadDTO.getIdentifier(), fileUploadDTO.getChunkSize(), fileUploadDTO.getChunkNumber()).toFile())
         ).of(FileCopyUtils::copy).getOrElseThrow(() -> new BizException(BizMessage.FILE_COPY_FAIL));
     }
 
     /**
      * 合并切片
      *
-     * @param chunkPath  切片目录
+     * @param fileId  文件唯一标识
      * @param chunkTotal 切片数量
      * @return
      */
-    public static Path mergeFile(Path chunkPath, Integer chunkTotal) {
+    public static Path mergeFile(String fileId, Long chunkSize, Integer chunkTotal) {
 
-        String cps = chunkPath.toString();
+        String cps = PathUtils.getChunkDirPath(fileId, chunkSize).toString();
         Path outPath = Path.of(cps, FILE_TMP);
         if (FileUtil.isExistingFile(outPath.toFile())) {
             return outPath;
         }
-        Try.of(() -> Files.createFile(Path.of(cps, FILE_TMP))).getOrElseThrow(() -> new BizException(BizMessage.FILE_CREATE_FILE));
+        Try.of(() -> Files.createFile(outPath)).getOrElseThrow(() -> new BizException(BizMessage.FILE_CREATE_FILE));
         for (int i = 1; i <= chunkTotal; i++) {
-            Path chunkFile = Path.of(cps, String.valueOf(i));
-            byte[] bytes = Try.of(() -> Files.readAllBytes(chunkFile)).getOrElseThrow(() -> new BizException(BizMessage.UPLOAD_FILE_GET_BYTES_FAIL));
+            Path chunkFile = PathUtils.getChunkFilePath(fileId, chunkSize, i);
+            byte[] bytes = Try.of(() -> Files.readAllBytes(chunkFile)).getOrElseThrow(() -> {
+                deleteRecursively(outPath);
+                return new BizException(BizMessage.UPLOAD_FILE_GET_BYTES_FAIL);
+            });
             Try.run(() -> Files.write(outPath, bytes, StandardOpenOption.APPEND));
         }
-        log.info("合并{}个切片文件[{}]", chunkTotal, chunkPath.getFileName());
+        log.info("合并{}个切片文件[{}]", chunkTotal, fileId);
         return outPath;
     }
 
@@ -207,17 +209,17 @@ public class FileUtils {
     /**
      * 文件支持分块下载和断点续传
      */
-    public static void chunkDownload(FileDTO fileDTO) {
+    public static void chunkDownload(String filename, String fileUrl, Long size, String contentType) {
+
         String username = Optional.ofNullable(SpringWebUtils.getRequestUser()).map(LoginUser::getUsername).orElse("匿名用户");
         HttpServletRequest request = SpringWebUtils.getRequest();
         HttpServletResponse response = SpringWebUtils.getResponse();
         String range = request.getHeader("Range");
-        log.info("current request rang:" + range);
         //开始下载位置
         long startByte = 0;
         //结束下载位置
-        long endByte = fileDTO.getSize() - 1;
-        log.info("文件开始位置：{}，文件结束位置：{}，文件总长度：{}", startByte, endByte, fileDTO.getSize());
+        long endByte = size - 1;
+        log.debug("文件[{}]开始位置：{}，文件结束位置：{}，文件总长度：{}", filename, startByte, endByte, size);
 
         //有range的话
         if (range != null && range.contains("bytes=") && range.contains("-")) {
@@ -244,45 +246,37 @@ public class FileUtils {
                 response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
             } catch (NumberFormatException e) {
                 startByte = 0;
-                endByte = fileDTO.getSize() - 1;
+                endByte = size - 1;
                 log.error("Range Occur Error,Message:{}", e.getLocalizedMessage());
             }
         }
 
         //要下载的长度
         long contentLength = endByte - startByte + 1;
-        //文件名
-        String fileName = fileDTO.getFullName();
-        //文件类型
-        String contentType = fileDTO.getContentType();
-
-        // 解决下载文件时文件名乱码问题
-        fileName = new String(fileName.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
 
         //各种响应头设置
         //支持断点续传，获取部分字节内容：
         response.setHeader("Accept-Ranges", "bytes");
         response.setContentType(contentType);
-        //inline表示浏览器直接使用，attachment表示下载，fileName表示下载的文件名
-        response.setHeader("Content-Disposition", "inline;filename=" + fileName);
+        //inline表示浏览器直接使用，attachment表示下载，fileName表示下载的文件名, 解决下载文件时文件名乱码问题
+        String contentDisposition = String.format("inline;filename=%s", new String(filename.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1));
+        response.setHeader("Content-Disposition", contentDisposition);
         response.setContentLengthLong(contentLength);
         // Content-Range，格式为：[要下载的开始位置]-[结束位置]/[文件总大小]
-        response.setHeader("Content-Range", "bytes " + startByte + "-" + endByte + "/" + fileDTO.getSize());
+        response.setHeader("Content-Range", "bytes " + startByte + "-" + endByte + "/" + size);
 
-        //已传送数据大小
-        long transmitted = 0;
         try (
-                InputStream inputStream = new FileInputStream(fileDTO.getUrl());
+                InputStream inputStream = new FileInputStream(fileUrl);
                 BufferedOutputStream outputStream = new BufferedOutputStream(response.getOutputStream());
         ) {
             StreamUtils.copyRange(inputStream, outputStream, startByte, endByte);
-            log.info(String.format("用户[%s]下载完毕：%d-%d: %d", username, startByte, endByte, transmitted));
+            log.info(String.format("用户[%s]下载[ %s ]完毕：%d-%d", username, filename, startByte, endByte));
         } catch (ClientAbortException e) {
-            log.warn(String.format("用户[%s]停止下载：%d-%d: %d", username, startByte, endByte, transmitted));
+            log.warn(String.format("用户[%s]停止[ %s ]下载：%d-%d", username, filename, startByte, endByte));
             //捕获此异常表示拥护停止下载
         } catch (IOException e) {
             e.printStackTrace();
-            log.info(String.format("用户[%s]下载IO异常，Message：{}", e.getLocalizedMessage()));
+            log.info(String.format("用户[%s]下载[ %s ]IO异常，Message：{}", filename, e.getLocalizedMessage()));
         }
     }
 }

@@ -23,6 +23,7 @@ import io.ddisk.utils.FileUtils;
 import io.ddisk.utils.ImageUtils;
 import io.ddisk.utils.PathUtils;
 import io.ddisk.utils.SpringWebUtils;
+import io.vavr.control.Try;
 import jodd.io.FileNameUtil;
 import jodd.net.MimeTypes;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @Transactional(rollbackFor = Throwable.class)
 public class FileServiceImpl implements FileService {
+
+	/**
+	 * 锁对象
+	 */
+	private final static Map<String, Object> LOCK_MAP = new HashMap<>();
 
 	@Autowired
 	private FileRepository fileRepository;
@@ -70,7 +76,7 @@ public class FileServiceImpl implements FileService {
 		// 如果存在，保存到该用户的用户文件夹
 		if (Objects.nonNull(fileEntity)) {
 
-			if (Objects.isNull(fileUploadDTO.getExtension())){
+			if (Objects.isNull(fileUploadDTO.getExtension())) {
 				fileUploadDTO.setExtension(FileNameUtil.getExtension(fileUploadDTO.getFilename()));
 				fileUploadDTO.setFilename(FileNameUtil.getBaseName(fileUploadDTO.getFilename()));
 			}
@@ -92,7 +98,7 @@ public class FileServiceImpl implements FileService {
 	@Override
 	public Collection<Integer> upload(Long userId, FileUploadDTO fileUploadDTO) {
 
-		List<ChunkEntity> chunks = chunkRepository.findAllByIdentifier(fileUploadDTO.getIdentifier());
+		List<ChunkEntity> chunks = chunkRepository.findAllByIdentifierAndChunkSize(fileUploadDTO.getIdentifier(), fileUploadDTO.getChunkSize());
 		Set<Integer> uploaded = chunks.parallelStream().map(ChunkEntity::getChunkNumber).collect(Collectors.toSet());
 		// 该切片已上传过
 		if (uploaded.contains(fileUploadDTO.getChunkNumber())) {
@@ -105,9 +111,9 @@ public class FileServiceImpl implements FileService {
 		BeanUtils.copyProperties(fileUploadDTO, chunkEntity, chunkEntity.getClass());
 
 		chunkRepository.save(chunkEntity);
-		uploaded = chunkRepository.findAllNumberByIdentifier(fileUploadDTO.getIdentifier());
+		uploaded = chunkRepository.findAllNumberByIdentifierAndChunkSize(fileUploadDTO.getIdentifier(), fileUploadDTO.getChunkSize());
 
-		if (uploaded.size() == fileUploadDTO.getTotalChunks()){
+		if (uploaded.size() == fileUploadDTO.getTotalChunks()) {
 			log.info("[{}]完成[{}]文件最后一块切片上传", SpringWebUtils.requireLogin().getUsername(), fileUploadDTO.getIdentifier());
 		}
 		return uploaded;
@@ -121,40 +127,79 @@ public class FileServiceImpl implements FileService {
 	@Override
 	public FileEntity mergeFile(MergeFileDTO mergeFileDTO) {
 
-		// 无上传切片
-		List<ChunkEntity> chunks = chunkRepository.findAllByIdentifier(mergeFileDTO.getIdentifier());
-		if (CollectionUtils.isEmpty(chunks)) {
-			throw new BizException(BizMessage.CHUNK_INCOMPLETE);
+		if (Objects.isNull(mergeFileDTO.getChunkSize())) {
+			List<Throwable> throwableList = new LinkedList<>();
+			List<Long> chunkSizeList = chunkRepository.findAllChunkSizeByIdentifier(mergeFileDTO.getIdentifier());
+			for (Long chunkSize : chunkSizeList) {
+				mergeFileDTO.setChunkSize(chunkSize);
+				FileEntity fileEntity = Try.of(() -> tryMergeChunks(mergeFileDTO)).onFailure(throwableList::add).getOrNull();
+				if (Objects.nonNull(fileEntity)) {
+					return fileEntity;
+				}
+			}
+			throwableList.forEach(throwable -> log.info("合并文件异常: ", throwable));
+			Throwable throwable = throwableList.size() > 0 ? throwableList.get(0) : new BizException(BizMessage.CHUNK_MERGE_ERROR);
+			throw new BizException(BizMessage.CHUNK_MERGE_ERROR, throwable);
 		}
+		return tryMergeChunks(mergeFileDTO);
+	}
 
-		// 切片不完整
-		Set<Integer> uploaded = chunks.parallelStream().map(ChunkEntity::getChunkNumber).collect(Collectors.toSet());
-		Integer totalChunks = chunks.get(0).getTotalChunks();
-		if (!totalChunks.equals(uploaded.size())) {
-			throw new BizException(BizMessage.CHUNK_INCOMPLETE);
+	/**
+	 * 尝试合并切片
+	 *
+	 * @param mergeFileDTO
+	 */
+	private FileEntity tryMergeChunks(MergeFileDTO mergeFileDTO) {
+		if (!LOCK_MAP.containsKey(mergeFileDTO.getIdentifier())) {
+			LOCK_MAP.put(mergeFileDTO.getIdentifier(), mergeFileDTO);
 		}
-
-		// 合并后文件路径
-		Path fromPath = FileUtils.mergeFile(
-				PathUtils.getChunkDirPath(chunks.get(0).getIdentifier()),
-				chunks.get(0).getTotalChunks()
-		);
-
-		// 获取文件基本信息
-		String md5 = FileUtils.md5(fromPath);
-		String mimetype = FileUtils.mimetype(fromPath, mergeFileDTO.getFilename());
-		Path toPath = PathUtils.getFilePath(mimetype, md5);
-
-		// 与前端提供的md5不一致，代表合并失败
-		if (!md5.equals(mergeFileDTO.getIdentifier())) {
-			FileUtils.deleteRecursively(fromPath);
-			throw new BizException(BizMessage.FILE_MERGE_FAIL);
+		FileEntity fileEntity = fileRepository.findById(mergeFileDTO.getIdentifier()).orElse(null);
+		if (Objects.nonNull(fileEntity)){
+			LOCK_MAP.remove(mergeFileDTO.getIdentifier());
+			return fileEntity;
 		}
+		synchronized (LOCK_MAP.get(mergeFileDTO.getIdentifier())){
+			fileEntity = fileRepository.findById(mergeFileDTO.getIdentifier()).orElseGet(() -> {
 
-		// 移动文件
-		FileUtils.move(fromPath, toPath);
+				List<ChunkEntity> chunks = chunkRepository.findAllByIdentifierAndChunkSize(mergeFileDTO.getIdentifier(), mergeFileDTO.getChunkSize());
+				// 无上传切片
+				if (CollectionUtils.isEmpty(chunks)) {
+					throw new BizException(BizMessage.CHUNK_INCOMPLETE);
+				}
 
-		return fileRepository.save(new FileEntity(md5, FileUtils.size(toPath), toPath.toString(), 0L, mimetype));
+				// 切片不完整
+				Set<Integer> uploaded = chunks.parallelStream().map(ChunkEntity::getChunkNumber).collect(Collectors.toSet());
+				Integer totalChunks = chunks.get(0).getTotalChunks();
+				if (!totalChunks.equals(uploaded.size())) {
+					throw new BizException(BizMessage.CHUNK_INCOMPLETE);
+				}
+
+				// 合并后文件路径
+				Path fromPath = FileUtils.mergeFile(
+						chunks.get(0).getIdentifier(),
+						chunks.get(0).getChunkSize(),
+						chunks.get(0).getTotalChunks()
+				);
+
+				// 获取文件基本信息
+				String md5 = FileUtils.md5(fromPath);
+				String mimetype = FileUtils.mimetype(fromPath, mergeFileDTO.getFilename());
+				Path toPath = PathUtils.getFilePath(mimetype, md5);
+
+				// 与前端提供的md5不一致，代表合并失败
+				if (!md5.equals(mergeFileDTO.getIdentifier())) {
+					FileUtils.deleteRecursively(fromPath);
+					throw new BizException(BizMessage.FILE_MERGE_FAIL);
+				}
+
+				// 移动文件
+				FileUtils.move(fromPath, toPath);
+
+				return fileRepository.save(new FileEntity(md5, FileUtils.size(toPath), toPath.toString(), 0L, mimetype));
+			});
+		}
+		LOCK_MAP.remove(mergeFileDTO.getIdentifier());
+		return fileEntity;
 	}
 
 	/**
@@ -244,6 +289,7 @@ public class FileServiceImpl implements FileService {
 	/**
 	 * 懒加载获取略缩图
 	 * 先查询数据库是否有该略缩图，如果有，直接生成FileDTO对象，如果无，则生成。
+	 *
 	 * @param userFileId
 	 * @return
 	 */
@@ -255,10 +301,10 @@ public class FileServiceImpl implements FileService {
 					if (uf.getDir()) {
 						throw new BizException(BizMessage.DIR_CAN_NOT_DOWNLOAD);
 					}
-					if (!uf.getUserId().equals(userId)){
+					if (!uf.getUserId().equals(userId)) {
 						throw new BizException(BizMessage.USER_FILE_NOT_ACCESS);
 					}
-					if (!FileConst.IMG_FILE.contains(uf.getExtension())){
+					if (!FileConst.IMG_FILE.contains(uf.getExtension())) {
 						throw new BizException(BizMessage.FILE_NOT_IMAGE);
 					}
 					return uf;

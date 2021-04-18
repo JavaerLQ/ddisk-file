@@ -1,6 +1,5 @@
 package io.ddisk.utils;
 
-import io.ddisk.domain.dto.FileUploadDTO;
 import io.ddisk.domain.enums.ImageSizeEnum;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,28 +16,29 @@ import static io.ddisk.domain.consts.FileConst.*;
 public class PathUtils {
 
 	/**
-	 * 获取文件切片目录
+	 * 获取切片文件根目录
 	 * @param identifier
 	 * @return
 	 */
-	public static Path getChunkDirPath(String identifier){
+	public static Path getChunkRootPath(String identifier){
 		return Path.of(UPLOAD_FOLDER, CHUNK_PATH, identifier);
 	}
 
 	/**
-	 * 拿到切片文件路径
-	 *
-	 * @param fileUploadDTO
+	 * 获取文件切片目录
+	 * @param identifier
 	 * @return
 	 */
-	public static Path getChunkFilePath(FileUploadDTO fileUploadDTO) {
+	public static Path getChunkDirPath(String identifier, Long chunkSize){
+		return Path.of(getChunkRootPath(identifier).toString(), String.valueOf(chunkSize));
+	}
 
-		Path path = Path.of(
-				UPLOAD_FOLDER,
-				CHUNK_PATH,
-				fileUploadDTO.getIdentifier(),
-				fileUploadDTO.getChunkNumber().toString()
-		);
+	/**
+	 * 拿到切片文件路径
+	 * @return
+	 */
+	public static Path getChunkFilePath(String fileId, Long chunkSize, Integer chunkNumber) {
+		Path path = Path.of(getChunkDirPath(fileId, chunkSize).toString(), String.valueOf(chunkNumber));
 		return FileUtils.mkdirs(path, false);
 	}
 

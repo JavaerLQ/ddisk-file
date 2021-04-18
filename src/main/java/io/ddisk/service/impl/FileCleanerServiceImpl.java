@@ -1,6 +1,7 @@
 package io.ddisk.service.impl;
 
 import io.ddisk.dao.*;
+import io.ddisk.domain.dto.ChunkPathDTO;
 import io.ddisk.domain.entity.FileEntity;
 import io.ddisk.domain.entity.ThumbnailEntity;
 import io.ddisk.domain.entity.UserFileEntity;
@@ -48,7 +49,7 @@ public class FileCleanerServiceImpl implements FileCleanerService {
 	@Override
 	public void cleanMergedFiles() {
 		List<String> mergedFileId = chunkRepository.findMergedFiles();
-		mergedFileId.forEach(fileId-> FileUtils.deleteRecursively(PathUtils.getChunkDirPath(fileId)));
+		mergedFileId.forEach(fileId-> FileUtils.deleteRecursively(PathUtils.getChunkRootPath(fileId)));
 		chunkRepository.deleteAllByIdentifierIn(mergedFileId);
 		log.info("垃圾回收器清理{}个文件残余切片", mergedFileId.size());
 	}
@@ -60,10 +61,11 @@ public class FileCleanerServiceImpl implements FileCleanerService {
 	public void cleanIncompleteChunks() {
 		// 默认清理1周前的碎片
 		Date date = Date.from(LocalDate.now().minusWeeks(1L).atStartOfDay(ZoneId.systemDefault()).toInstant());
-		List<String> fileIds = chunkRepository.findIncompleteChunksDateBefore(date);
-		fileIds.forEach(id->FileUtils.deleteRecursively(PathUtils.getChunkDirPath(id)));
+		List<ChunkPathDTO> chunkPathList = chunkRepository.findIncompleteChunksDateBefore(date);
+		chunkPathList.forEach(chunkPath->FileUtils.deleteRecursively(PathUtils.getChunkDirPath(chunkPath.getFileId(), chunkPath.getChunkSize())));
+		List<String> fileIds = chunkPathList.stream().map(ChunkPathDTO::getFileId).collect(Collectors.toList());
 		chunkRepository.deleteAllByIdentifierIn(fileIds);
-		log.info("垃圾回收器清理{}未完成合并文件切片", fileIds.size());
+		log.info("垃圾回收器清理{}未完成合并文件切片", chunkPathList.size());
 	}
 
 	/**

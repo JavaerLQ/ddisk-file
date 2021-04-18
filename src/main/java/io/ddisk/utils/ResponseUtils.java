@@ -4,24 +4,13 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.ddisk.domain.dto.FileDTO;
-import io.ddisk.domain.vo.LoginUser;
-import io.ddisk.exception.BizException;
-import io.ddisk.exception.msg.BizMessage;
 import io.vavr.control.Try;
 import jodd.util.StringPool;
-import org.springframework.util.DigestUtils;
-import org.springframework.util.StreamUtils;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @Author: Richard.Lee
@@ -53,7 +42,7 @@ public class ResponseUtils {
 	 * 发送文件至客户端, 支持视频拖拽，断点续传
 	 */
 	public static void sendFile(FileDTO fileDTO) {
-		FileUtils.chunkDownload(fileDTO);
+		FileUtils.chunkDownload(fileDTO.getFullName(), fileDTO.getUrl(), fileDTO.getSize(), fileDTO.getContentType());
 	}
 
 	public static class BodyBuilder {

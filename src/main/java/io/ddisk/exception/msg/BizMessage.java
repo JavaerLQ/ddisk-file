@@ -40,6 +40,7 @@ public enum BizMessage implements BaseMessage {
     FILE_MOVE_FAIL(2017, "文件重命名或移动失败"),
     FILE_NOT_IMAGE(2018, "非图片类型文件"),
     NOT_MEDIA_FILE(2019, "非媒体文件"),
+    CHUNK_MERGE_ERROR(2020, "切片合并出错"),
 
     /**
      * 参数类错误
