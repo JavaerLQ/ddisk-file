@@ -44,8 +44,7 @@ public interface UserFileRepository extends JpaRepository<UserFileEntity, Long> 
 	Page<UserFileEntity> findAllByFilenameLike(String filename, Pageable pageable);
 
 	@Query(
-			value = "select u1 from UserFileEntity u1 where u1.userId=:userId and u1.delete=true and (u1.pid is null or u1.pid not in (select u2.id from UserFileEntity u2 where u2.userId = :userId AND u2.delete = true))",
-			countQuery = "select u1 from UserFileEntity u1 where u1.userId=:userId and u1.delete=true and (u1.pid is null or u1.pid not in (select u2.id from UserFileEntity u2 where u2.userId = :userId AND u2.delete = true))"
+			value = "select u1 from UserFileEntity u1 where u1.userId=:userId and u1.delete=true and (u1.pid is null or u1.pid not in (select u2.id from UserFileEntity u2 where u2.userId = :userId AND u2.delete = true))"
 	)
 	Page<UserFileEntity> findAllRecycleRoot(Long userId, Pageable pageable);
 
