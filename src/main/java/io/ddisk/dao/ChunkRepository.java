@@ -39,14 +39,6 @@ public interface ChunkRepository extends JpaRepository<ChunkEntity, Long> {
 	Set<Integer> findAllNumberByIdentifierAndChunkSize(String identifier, Long chunkSize);
 
 	/**
-	 * 确定一个文件是否上传过该切片
-	 * @param identifier
-	 * @param chunkNumber
-	 * @return
-	 */
-	Boolean existsByIdentifierAndChunkNumber(String identifier, Integer chunkNumber);
-
-	/**
 	 * 查询已合并的切片
 	 * @return 文件唯一id
 	 */

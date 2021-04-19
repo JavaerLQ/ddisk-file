@@ -53,7 +53,7 @@ public class LoginUser implements UserDetails {
 	private String email;
 
 	/**
-	 * 用户头像链接，指向File的ID
+	 * 用户头像链接，指向用户文件ID
 	 */
 	@Schema(description = "头像url", example = "http://xxx.apple.png")
 	private String imgUrl;
