@@ -1,5 +1,6 @@
 package io.ddisk.service.impl;
 
+import com.google.common.collect.Maps;
 import io.ddisk.dao.ChunkRepository;
 import io.ddisk.dao.FileRepository;
 import io.ddisk.dao.ThumbnailRepository;
@@ -48,9 +49,9 @@ import java.util.stream.Collectors;
 public class FileServiceImpl implements FileService {
 
 	/**
-	 * 锁对象
+	 * 存储锁对象
 	 */
-	private final static Map<String, Object> LOCK_MAP = new HashMap<>();
+	private final static Map<String, Object> LOCK_MAP = Maps.newConcurrentMap();
 
 	@Autowired
 	private FileRepository fileRepository;
@@ -150,6 +151,7 @@ public class FileServiceImpl implements FileService {
 	 * @param mergeFileDTO
 	 */
 	private FileEntity tryMergeChunks(MergeFileDTO mergeFileDTO) {
+
 		if (!LOCK_MAP.containsKey(mergeFileDTO.getIdentifier())) {
 			LOCK_MAP.put(mergeFileDTO.getIdentifier(), mergeFileDTO);
 		}
@@ -158,7 +160,7 @@ public class FileServiceImpl implements FileService {
 			LOCK_MAP.remove(mergeFileDTO.getIdentifier());
 			return fileEntity;
 		}
-		synchronized (LOCK_MAP.get(mergeFileDTO.getIdentifier())){
+		synchronized (Optional.ofNullable(LOCK_MAP.get(mergeFileDTO.getIdentifier())).orElse(this)){
 			fileEntity = fileRepository.findById(mergeFileDTO.getIdentifier()).orElseGet(() -> {
 
 				List<ChunkEntity> chunks = chunkRepository.findAllByIdentifierAndChunkSize(mergeFileDTO.getIdentifier(), mergeFileDTO.getChunkSize());
