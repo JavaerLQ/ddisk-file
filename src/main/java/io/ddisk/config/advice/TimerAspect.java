@@ -10,12 +10,12 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
-//申明主体类，定义切面主体类
+
 @Slf4j
 @Aspect
-@Component
+@Configuration
 public class TimerAspect {
 
 	private final long SEC3 = 3000L;

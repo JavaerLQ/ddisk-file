@@ -1,6 +1,5 @@
 package io.ddisk.service.impl;
 
-import com.google.common.collect.Maps;
 import io.ddisk.dao.ChunkRepository;
 import io.ddisk.dao.FileRepository;
 import io.ddisk.dao.ThumbnailRepository;
@@ -13,9 +12,11 @@ import io.ddisk.domain.entity.ChunkEntity;
 import io.ddisk.domain.entity.FileEntity;
 import io.ddisk.domain.entity.ThumbnailEntity;
 import io.ddisk.domain.entity.UserFileEntity;
-import io.ddisk.domain.enums.ThumbnailTypeEnum;
 import io.ddisk.domain.enums.RoleEnum;
+import io.ddisk.domain.enums.ThumbnailTypeEnum;
 import io.ddisk.domain.vo.UploadFileVO;
+import io.ddisk.eventbus.SystemDataBus;
+import io.ddisk.eventbus.event.SyncLockEvent;
 import io.ddisk.exception.BizException;
 import io.ddisk.exception.msg.BizMessage;
 import io.ddisk.service.FileService;
@@ -49,11 +50,8 @@ import java.util.stream.Collectors;
 @Transactional(rollbackFor = Throwable.class)
 public class FileServiceImpl implements FileService {
 
-	/**
-	 * 存储锁对象
-	 */
-	private final static Map<String, Object> LOCK_MAP = Maps.newConcurrentMap();
-
+	@Autowired
+	private SystemDataBus systemDataBus;
 	@Autowired
 	private FileRepository fileRepository;
 	@Autowired
@@ -153,15 +151,13 @@ public class FileServiceImpl implements FileService {
 	 */
 	private FileEntity tryMergeChunks(MergeFileDTO mergeFileDTO) {
 
-		if (!LOCK_MAP.containsKey(mergeFileDTO.getIdentifier())) {
-			LOCK_MAP.put(mergeFileDTO.getIdentifier(), mergeFileDTO);
-		}
+		systemDataBus.postSync(new SyncLockEvent(mergeFileDTO.getIdentifier()));
 		FileEntity fileEntity = fileRepository.findById(mergeFileDTO.getIdentifier()).orElse(null);
 		if (Objects.nonNull(fileEntity)) {
-			LOCK_MAP.remove(mergeFileDTO.getIdentifier());
+			systemDataBus.postAsync(new SyncLockEvent(mergeFileDTO.getIdentifier(), true, 6000));
 			return fileEntity;
 		}
-		synchronized (Optional.ofNullable(LOCK_MAP.get(mergeFileDTO.getIdentifier())).orElse(this)) {
+		synchronized (SyncLockEvent.getLock(mergeFileDTO.getIdentifier())) {
 			fileEntity = fileRepository.findById(mergeFileDTO.getIdentifier()).orElseGet(() -> {
 
 				List<ChunkEntity> chunks = chunkRepository.findAllByIdentifierAndChunkSize(mergeFileDTO.getIdentifier(), mergeFileDTO.getChunkSize());
@@ -201,7 +197,7 @@ public class FileServiceImpl implements FileService {
 				return fileRepository.save(new FileEntity(md5, FileUtils.size(toPath), toPath.toString(), 0L, mimetype));
 			});
 		}
-		LOCK_MAP.remove(mergeFileDTO.getIdentifier());
+		systemDataBus.postAsync(new SyncLockEvent(mergeFileDTO.getIdentifier(), true, 6000));
 		return fileEntity;
 	}
 
