@@ -3,8 +3,6 @@ package io.ddisk.domain.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.Arrays;
-
 /**
  * @Author: Richard.Lee
  * @Date: created by 2021/4/5
@@ -32,17 +30,17 @@ public enum ThumbnailTypeEnum {
 	 */
 	private Integer height;
 	/**
-	 * 缩放比例
+	 * 缩放比例, 最多两位小数
 	 */
 	private Float scale;
 
 
 	public Boolean isSize(){
-		return Arrays.stream(values()).anyMatch(thumbnailTypeEnum -> thumbnailTypeEnum.width!=0F);
+		return !(width==0 || height==0);
 	}
 
 	public Boolean isScale(){
-		return Arrays.stream(values()).anyMatch(thumbnailTypeEnum -> thumbnailTypeEnum.scale!=0F);
+		return Math.abs(scale) > 0.001;
 	}
 
 	/**
@@ -51,7 +49,7 @@ public enum ThumbnailTypeEnum {
 	 */
 	public String getSuffixName(){
 		String sizeName = String.format("_%dx%d", getWidth(), getHeight());
-		String scaleName = String.format("_%f", getScale());
+		String scaleName = String.format("_%.2f", getScale());
 		return String.format("%s%s", isSize()?sizeName:"", isScale()?scaleName:"");
 	}
 }
