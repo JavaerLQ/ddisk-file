@@ -22,6 +22,6 @@ public enum TokenTypeEnum {
 	 */
 	REGISTER(2,"用户注册-验证令牌-类型");
 
-	private Integer type;
-	private String description;
+	private final Integer type;
+	private final String description;
 }

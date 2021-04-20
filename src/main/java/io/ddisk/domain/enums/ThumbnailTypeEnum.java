@@ -24,15 +24,15 @@ public enum ThumbnailTypeEnum {
 	/**
 	 * 图片宽度
 	 */
-	private Integer width;
+	private final Integer width;
 	/**
 	 * 图片高度
 	 */
-	private Integer height;
+	private final Integer height;
 	/**
 	 * 缩放比例, 最多两位小数
 	 */
-	private Float scale;
+	private final Float scale;
 
 
 	public Boolean isSize(){
