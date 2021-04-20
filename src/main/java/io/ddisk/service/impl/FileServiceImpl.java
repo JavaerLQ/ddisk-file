@@ -13,7 +13,7 @@ import io.ddisk.domain.entity.ChunkEntity;
 import io.ddisk.domain.entity.FileEntity;
 import io.ddisk.domain.entity.ThumbnailEntity;
 import io.ddisk.domain.entity.UserFileEntity;
-import io.ddisk.domain.enums.ImageSizeEnum;
+import io.ddisk.domain.enums.ThumbnailTypeEnum;
 import io.ddisk.domain.enums.RoleEnum;
 import io.ddisk.domain.vo.UploadFileVO;
 import io.ddisk.exception.BizException;
@@ -30,6 +30,7 @@ import jodd.net.MimeTypes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -156,11 +157,11 @@ public class FileServiceImpl implements FileService {
 			LOCK_MAP.put(mergeFileDTO.getIdentifier(), mergeFileDTO);
 		}
 		FileEntity fileEntity = fileRepository.findById(mergeFileDTO.getIdentifier()).orElse(null);
-		if (Objects.nonNull(fileEntity)){
+		if (Objects.nonNull(fileEntity)) {
 			LOCK_MAP.remove(mergeFileDTO.getIdentifier());
 			return fileEntity;
 		}
-		synchronized (Optional.ofNullable(LOCK_MAP.get(mergeFileDTO.getIdentifier())).orElse(this)){
+		synchronized (Optional.ofNullable(LOCK_MAP.get(mergeFileDTO.getIdentifier())).orElse(this)) {
 			fileEntity = fileRepository.findById(mergeFileDTO.getIdentifier()).orElseGet(() -> {
 
 				List<ChunkEntity> chunks = chunkRepository.findAllByIdentifierAndChunkSize(mergeFileDTO.getIdentifier(), mergeFileDTO.getChunkSize());
@@ -295,6 +296,7 @@ public class FileServiceImpl implements FileService {
 	 * @param userFileId
 	 * @return
 	 */
+	@Cacheable(value = "thumbnail", key = "#userFileId")
 	@Override
 	public FileDTO getThumbnail(Long userId, Long userFileId) {
 
@@ -313,11 +315,11 @@ public class FileServiceImpl implements FileService {
 				})
 				.orElseThrow(() -> new BizException(BizMessage.FILE_NOT_EXIST));
 
-		ThumbnailEntity thumbnail = thumbnailRepository.findByFileIdAndImageSize(userFileEntity.getFileId(), ImageSizeEnum.MIN).orElseGet(() -> {
+		ThumbnailEntity thumbnail = thumbnailRepository.findByFileIdAndImageSize(userFileEntity.getFileId(), ThumbnailTypeEnum.MIN_SCALE).orElseGet(() -> {
 			FileEntity fileEntity = fileRepository.findById(userFileEntity.getFileId()).orElseThrow(() -> new BizException(BizMessage.FILE_NOT_EXIST));
-			Path out = PathUtils.getThumbnailFilePath(fileEntity.getId(), userFileEntity.getExtension(), ImageSizeEnum.MIN);
-			ImageUtils.generateMin(new File(fileEntity.getUrl()), out.toFile());
-			ThumbnailEntity thumbnailEntity = new ThumbnailEntity(fileEntity.getId(), out.toString(), ImageSizeEnum.MIN, FileUtils.size(out));
+			Path out = PathUtils.getThumbnailFilePath(fileEntity.getId(), userFileEntity.getExtension(), ThumbnailTypeEnum.MIN_SCALE);
+			ImageUtils.generateMinSize(new File(fileEntity.getUrl()), out.toFile());
+			ThumbnailEntity thumbnailEntity = new ThumbnailEntity(fileEntity.getId(), out.toString(), ThumbnailTypeEnum.MIN_SCALE, FileUtils.size(out));
 			return thumbnailRepository.save(thumbnailEntity);
 		});
 

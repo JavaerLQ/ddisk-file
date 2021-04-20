@@ -1,6 +1,6 @@
 package io.ddisk.domain.entity;
 
-import io.ddisk.domain.enums.ImageSizeEnum;
+import io.ddisk.domain.enums.ThumbnailTypeEnum;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
@@ -40,20 +40,17 @@ public class ThumbnailEntity {
 	@Column(name = "img_url", nullable = false, unique = true)
 	private String url;
 
-	@Column(name = "width", nullable = false)
-	private Integer width;
-
-	@Column(name = "height", nullable = false)
-	private Integer height;
+	@Column(name = "thumbnail_type", nullable = false)
+	@Enumerated(EnumType.STRING)
+	private ThumbnailTypeEnum type;
 
 	@Column(name = "file_size", nullable = false)
 	private Long fileSize;
 
-	public ThumbnailEntity(String fileId, String url, ImageSizeEnum sizeEnum, Long fileSize) {
+	public ThumbnailEntity(String fileId, String url, ThumbnailTypeEnum type, Long fileSize) {
 		this.fileId = fileId;
 		this.url = url;
-		this.width = sizeEnum.getWidth();
-		this.height = sizeEnum.getHeight();
+		this.type = type;
 		this.fileSize = fileSize;
 	}
 }

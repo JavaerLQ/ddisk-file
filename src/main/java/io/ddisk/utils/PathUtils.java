@@ -1,6 +1,6 @@
 package io.ddisk.utils;
 
-import io.ddisk.domain.enums.ImageSizeEnum;
+import io.ddisk.domain.enums.ThumbnailTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
@@ -52,20 +52,12 @@ public class PathUtils {
 		return FileUtils.mkdirs(path, false);
 	}
 
-
-	/**
-	 * 获取略缩图文件基础文件名
-	 */
-	public static Path getThumbnailBaseName(String identifier, ImageSizeEnum sizeEnum){
-		String filename = String.format("%s_%dx%d", identifier, sizeEnum.getWidth(), sizeEnum.getHeight());
-		return Path.of(UPLOAD_FOLDER, UPLOAD_FOLDER, filename);
-	}
-
 	/**
 	 * 获取略缩图文件路径
 	 */
-	public static Path getThumbnailFilePath(String identifier, String extension, ImageSizeEnum sizeEnum){
-		String filename = String.format("%s_%dx%d.%s", identifier, sizeEnum.getWidth(), sizeEnum.getHeight(), extension);
+	public static Path getThumbnailFilePath(String identifier, String extension, ThumbnailTypeEnum type){
+
+		String filename = String.format("%s%s.%s", identifier, type.getSuffixName(), extension);
 		Path path = Path.of(UPLOAD_FOLDER, THUMBNAIL_PATH, filename);
 		return FileUtils.mkdirs(path, false);
 	}
