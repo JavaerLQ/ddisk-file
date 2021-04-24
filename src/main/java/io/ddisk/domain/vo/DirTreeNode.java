@@ -23,14 +23,14 @@ public class DirTreeNode {
 
 
 	@Schema(description = "用户文件id")
-	private Long id;
+	private String id;
 
 	@JsonProperty("label")
 	@Schema(description ="用户文件名")
 	private String filename;
 
 	@Schema(description = "所在目录，根目录为null")
-	private Long pid;
+	private String pid;
 
 	@Schema(description = "深度")
 	private Long depth;

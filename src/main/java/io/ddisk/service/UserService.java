@@ -58,7 +58,7 @@ public interface UserService {
 	 * @param userId
 	 * @param fileId
 	 */
-	void setAvator(Long userId, Long fileId);
+	void setAvator(Long userId, String fileId);
 
 	/**
 	 * 用户注册，发送令牌至用户邮箱

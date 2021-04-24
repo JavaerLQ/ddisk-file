@@ -48,7 +48,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param filename 文件夹
 	 */
 	@Override
-	public void mkdir(Long userId, Long pid, String filename) {
+	public void mkdir(Long userId, String pid, String filename) {
 		userFileRepository.save(new UserFileEntity(userId, filename, pid));
 	}
 
@@ -60,7 +60,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param extension  扩展名
 	 */
 	@Override
-	public void rename(Long userFileId, String filename, String extension) {
+	public void rename(String userFileId, String filename, String extension) {
 		UserFileEntity userFileEntity = userFileRepository.findById(userFileId).orElseThrow(() -> new BizException(BizMessage.USER_FILE_NOT_EXIST));
 		if (Objects.nonNull(filename)) {
 			userFileEntity.setFilename(filename);
@@ -80,7 +80,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @return
 	 */
 	@Override
-	public PageVO<FileVO> listTheDir(Long userId, Long pid, PageDTO page) {
+	public PageVO<FileVO> listTheDir(Long userId, String pid, PageDTO page) {
 
 		Page<UserFileEntity> userFilePage = userFileRepository.findAllByUserIdAndPidAndDelete(userId, pid, false, page.buildPageRequest());
 
@@ -91,7 +91,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * 确认目标文件夹是否有效
 	 * @param userFileId
 	 */
-	private void checkTargetDir(Long userFileId){
+	private void checkTargetDir(String userFileId){
 		if (Objects.nonNull(userFileId)){
 			UserFileEntity toFile = userFileRepository.findByIdAndDelete(userFileId, false).orElseThrow(() -> new BizException(BizMessage.USER_DIR_NOT_EXIST));
 			if (!toFile.getDir()) {
@@ -106,7 +106,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param to
 	 */
 	@Override
-	public void move(Long from, Long to) {
+	public void move(String from, String to) {
 		checkTargetDir(to);
 		UserFileEntity fromFile = userFileRepository.findByIdAndDelete(from, false).orElseThrow(() -> new BizException(BizMessage.USER_DIR_NOT_EXIST));
 		fromFile.setPid(to);
@@ -120,7 +120,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param to
 	 */
 	@Override
-	public void move(List<Long> fromList, Long to) {
+	public void move(List<String> fromList, String to) {
 		checkTargetDir(to);
 		userFileRepository.updatePidByIdInAndPid(fromList, to);
 	}
@@ -131,7 +131,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param userFileId
 	 */
 	@Override
-	public void delete(Long userFileId) {
+	public void delete(String userFileId) {
 		deleteOrRecover(List.of(userFileId), true);
 	}
 
@@ -141,12 +141,12 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param userFileList
 	 */
 	@Override
-	public void delete(List<Long> userFileList) {
+	public void delete(List<String> userFileList) {
 		deleteOrRecover(userFileList, true);
 	}
 
 	@Override
-	public void recover(Long userFileId) {
+	public void recover(String userFileId) {
 		deleteOrRecover(List.of(userFileId), false);
 	}
 
@@ -156,7 +156,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param userFileIdList
 	 */
 	@Override
-	public void recover(List<Long> userFileIdList) {
+	public void recover(List<String> userFileIdList) {
 		deleteOrRecover(userFileIdList, false);
 	}
 
@@ -166,7 +166,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param userFileId
 	 */
 	@Override
-	public void deleteFromRecycleBin(Long userFileId) {
+	public void deleteFromRecycleBin(String userFileId) {
 		deleteFromRecycleBin(List.of(userFileId));
 	}
 
@@ -176,7 +176,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param userFileIdList
 	 */
 	@Override
-	public void deleteFromRecycleBin(List<Long> userFileIdList) {
+	public void deleteFromRecycleBin(List<String> userFileIdList) {
 		List<UserFileEntity> childrenList = getChildrenList(userFileIdList, true);
 		userFileRepository.deleteAll(childrenList);
 	}
@@ -222,7 +222,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param userFileIdList 文件或目录id列表
 	 * @param delete     删除文件true, 恢复文件false
 	 */
-	private void deleteOrRecover(List<Long> userFileIdList, Boolean delete) {
+	private void deleteOrRecover(List<String> userFileIdList, Boolean delete) {
 
 		List<UserFileEntity> childrenList = getChildrenList(userFileIdList, !delete);
 		userStorageService.deleteFileCalculator(childrenList, delete);
@@ -236,14 +236,14 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param delete     如果是获取回收站文件及子文件true，获取非回收站文件false
 	 * @return
 	 */
-	private List<UserFileEntity> getChildrenList(List<Long> userFileIdList, Boolean delete) {
+	private List<UserFileEntity> getChildrenList(List<String> userFileIdList, Boolean delete) {
 
 		List<UserFileEntity> userFileList = userFileRepository.findAllByIdInAndDelete(userFileIdList, delete);
 		List<UserFileEntity> result = new LinkedList<>(userFileList);
 
 		userFileList.forEach(userFileEntity -> {
 			if (userFileEntity.getDir()) {
-				List<Long> tmpIds = List.of(userFileEntity.getId());
+				List<String> tmpIds = List.of(userFileEntity.getId());
 				while (!CollectionUtils.isEmpty(tmpIds)) {
 					List<UserFileEntity> children = userFileRepository.findAllByPidInAndDelete(tmpIds, delete);
 					tmpIds = children.parallelStream().map(UserFileEntity::getId).collect(Collectors.toList());
@@ -282,7 +282,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param userFileEntityList
 	 * @return
 	 */
-	private List<DirTreeNode> getDirChildrenTree(Long pid, Long depth, List<UserFileEntity> userFileEntityList) {
+	private List<DirTreeNode> getDirChildrenTree(String pid, Long depth, List<UserFileEntity> userFileEntityList) {
 
 		return userFileEntityList.parallelStream().filter(uf -> pid.equals(uf.getPid())).map(uf ->
 				DirTreeNode.create(uf, depth, getDirChildrenTree(uf.getId(), depth + 1, userFileEntityList))
@@ -313,7 +313,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 */
 	
 	@Override
-	public Map<Long, PathNodeVO> getPathTreeMap(Long userId) {
+	public Map<String, PathNodeVO> getPathTreeMap(Long userId) {
 
 		return userFileRepository.findAllPathNodeByUserId(userId).stream().collect(Collectors.toMap(PathNodeVO::getId, PathNodeVO::self));
 	}
@@ -339,7 +339,7 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param fileId
 	 */
 	@Override
-	public void checkImage(Long userId, Long fileId) {
+	public void checkImage(Long userId, String fileId) {
 		UserFileEntity userFileEntity = userFileRepository.findById(fileId).orElseThrow(() -> new BizException(BizMessage.USER_FILE_NOT_EXIST));
 		if (!userFileEntity.getUserId().equals(userId)){
 			throw new BizException(BizMessage.FILE_ILLEGAL_ACCESS);

@@ -26,7 +26,7 @@ public class FileEntity implements Serializable {
 	 * 文件独一无二的MD5
 	 */
 	@Id
-	@Column(name = "file_id")
+	@Column(name = "file_id", length = 32)
 	private String id;
 
 	/**

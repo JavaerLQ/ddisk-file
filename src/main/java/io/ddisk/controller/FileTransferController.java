@@ -19,10 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -62,7 +60,7 @@ public class FileTransferController {
     @Parameters({
             @Parameter(name = "userFileId", description = "用户文件id，需要登录用户的文件", required = true)
     })
-    public void downloadFile(@PathVariable @Min(0) Long userFileId){
+    public void downloadFile(@PathVariable @NotBlank String userFileId){
 
         LoginUser user = SpringWebUtils.requireLogin();
         FileDTO fileDTO = fileService.getFileResource(user.getId(), user.getRole(), userFileId);
@@ -75,7 +73,7 @@ public class FileTransferController {
     @Parameters({
             @Parameter(name = "userFileId", description = "用户文件id，需要登录用户的文件", required = true)
     })
-    public void thumbnail(@PathVariable @Min(0) Long userFileId){
+    public void thumbnail(@PathVariable @NotBlank String userFileId){
 
         LoginUser user = SpringWebUtils.requireLogin();
         FileDTO fileDTO = fileService.getThumbnail(user.getId(), userFileId);

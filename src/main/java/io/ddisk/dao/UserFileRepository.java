@@ -17,19 +17,21 @@ import java.util.Optional;
  * @Author: Richard.Lee
  * @Date: created by 2021/3/8
  */
-public interface UserFileRepository extends JpaRepository<UserFileEntity, Long> {
+public interface UserFileRepository extends JpaRepository<UserFileEntity, String> {
 
-	Optional<UserFileEntity> findByIdAndDelete(Long userFileId, Boolean delete);
+	List<UserFileEntity> findAllByUserIdAndIdIn(Long userId, Collection<String> ids);
 
-	List<UserFileEntity> findAllByIdInAndDelete(Collection<Long> userFileIds, Boolean delete);
+	Optional<UserFileEntity> findByIdAndDelete(String userFileId, Boolean delete);
+
+	List<UserFileEntity> findAllByIdInAndDelete(Collection<String> userFileIds, Boolean delete);
 
 	List<UserFileEntity> findAllByDeleteIsTrueAndDeleteTimeBefore(Date date);
 
 	List<UserFileEntity> findAllByUserIdAndDirAndDelete(Long userId, Boolean dir, Boolean delete);
 
-	List<UserFileEntity> findAllByPidInAndDelete(List<Long> tmpIds, Boolean delete);
+	List<UserFileEntity> findAllByPidInAndDelete(List<String> pids, Boolean delete);
 
-	Page<UserFileEntity> findAllByUserIdAndPidAndDelete(Long userId, Long pid, Boolean delete, Pageable pageable);
+	Page<UserFileEntity> findAllByUserIdAndPidAndDelete(Long userId, String pid, Boolean delete, Pageable pageable);
 
 	/**
 	 * 分页查询非回收站文件列表，根据用户id和扩展名集合
@@ -54,9 +56,9 @@ public interface UserFileRepository extends JpaRepository<UserFileEntity, Long> 
 
 	@Modifying
 	@Query("update UserFileEntity uf set uf.pid=:to where uf.id in :fromList")
-	int updatePidByIdInAndPid(List<Long> fromList, Long to);
+	int updatePidByIdInAndPid(List<String> fromList, String to);
 
 	@Modifying
 	@Query("update UserFileEntity uf set uf.delete=:delete, uf.deleteTime=current_date where uf.id in :ids")
-	int updateDeleteByIdIn(Collection<Long> ids, Boolean delete);
+	int updateDeleteByIdIn(Collection<String> ids, Boolean delete);
 }

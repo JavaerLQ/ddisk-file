@@ -15,6 +15,7 @@ public enum BizMessage implements BaseMessage {
     SYSTEM_EXCEPTION(1000, "系统异常"),
     SYSTEM_DAMAGED_BY_USER(1001, "请停止您的非法行为"),
     REQUEST_PARAMS_INVALIDATE(1002, "请求参数校验不通过"),
+    SYSTEM_UUID_ERROR(1003, "UUID获取失败"),
 
     /**
      * 文件上传，文件IO
@@ -78,6 +79,19 @@ public enum BizMessage implements BaseMessage {
     USER_FILE_NOT_DIR(7003, "该用户文件不是文件夹"),
     USER_FILE_NOT_ACCESS(7004, "用户文件不可访问"),
 
+    /**
+     * 文件分享
+     */
+    FILE_SHARE_INVALID(9000, "分享文件已失效"),
+    FILE_SHARE_EXPIRED(9001, "分享文件已过期"),
+    FILE_SHARE_MAX_TIMES(9002, "分享文件已达最大次数"),
+    // 从回收站中删除
+    FILE_SHARE_ORIGIN_FILE_NOT_EXIST(9003, "分享文件源文件不存在"),
+    // 分享文件在回收站中
+    FILE_SHARE_ORIGIN_FILE_DELETED(9004, "分享文件源文件已删除"),
+    FILE_SHARE_EXIST(9005, "该文件已经分享过了"),
+    FILE_SHARE_NOT_EXIST(9006, "该文件未被分享"),
+    FILE_SHARE_OWNER_ERROR(9007, "该文件并非您分享的噢"),
     ;
     private Integer code;
     private String message;

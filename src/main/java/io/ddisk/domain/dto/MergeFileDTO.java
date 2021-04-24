@@ -16,7 +16,7 @@ import javax.validation.constraints.NotBlank;
 public class MergeFileDTO {
 
 	@Schema(description = "文件夹ID")
-	private Long folderId;
+	private String folderId;
 
 	@NotBlank
 	@Schema(description = "文件名")

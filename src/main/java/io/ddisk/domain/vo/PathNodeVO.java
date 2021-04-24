@@ -16,11 +16,11 @@ public class PathNodeVO {
 	/**
 	 * 用户文件Id
 	 */
-	private Long id;
+	private String id;
 	/**
 	 * 父id
 	 */
-	private Long pid;
+	private String pid;
 	/**
 	 * 用户文件名
 	 */

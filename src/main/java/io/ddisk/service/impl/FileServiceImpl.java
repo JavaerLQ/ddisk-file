@@ -263,7 +263,7 @@ public class FileServiceImpl implements FileService {
 	 * @return 返回文件下载信息
 	 */
 	@Override
-	public FileDTO getFileResource(Long userId, RoleEnum role, Long userFileId) {
+	public FileDTO getFileResource(Long userId, RoleEnum role, String userFileId) {
 
 		UserFileEntity userFileEntity = userFileRepository.findById(userFileId)
 				.map(uf -> {
@@ -294,7 +294,7 @@ public class FileServiceImpl implements FileService {
 	 */
 	@Cacheable(value = "thumbnail", key = "#userFileId")
 	@Override
-	public FileDTO getThumbnail(Long userId, Long userFileId) {
+	public FileDTO getThumbnail(Long userId, String userFileId) {
 
 		UserFileEntity userFileEntity = userFileRepository.findById(userFileId)
 				.map(uf -> {

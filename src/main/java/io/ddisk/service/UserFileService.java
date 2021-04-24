@@ -23,7 +23,7 @@ public interface UserFileService {
 	 * @param pid 父目录
 	 * @param filename 文件夹   
 	 */
-	void mkdir(Long userId, Long pid,  String filename);
+	void mkdir(Long userId, String pid,  String filename);
 
 	/**
 	 * 文件重命名
@@ -31,7 +31,7 @@ public interface UserFileService {
 	 * @param filename 文件名
 	 * @param extension 扩展名
 	 */
-	void rename(Long userFileId, String filename, String extension);
+	void rename(String userFileId, String filename, String extension);
 	
 	/**
 	 * 分页查询
@@ -41,7 +41,7 @@ public interface UserFileService {
 	 * @param page 分页数据，前端起始页1，默认每页条数10
 	 * @return
 	 */
-	PageVO<FileVO> listTheDir(Long userId, Long pid, PageDTO page);
+	PageVO<FileVO> listTheDir(Long userId, String pid, PageDTO page);
 
 	/**
 	 * 展示目录树
@@ -55,50 +55,50 @@ public interface UserFileService {
 	 * @param from
 	 * @param to
 	 */
-	void move(Long from, Long to);
+	void move(String from, String to);
 
 	/**
 	 * 批量移动文件
 	 * @param fromList
 	 * @param to
 	 */
-	void move(List<Long> fromList, Long to);
+	void move(List<String> fromList, String to);
 
 	/**
 	 * 删除文件或者文件夹，删除文件夹时，文件夹里的文件也一并删除。此操作为逻辑删除
 	 * @param userFileId
 	 */
-	void delete(Long userFileId);
+	void delete(String userFileId);
 
 	/**
 	 * 批量删除文件或者文件夹，删除文件夹时，文件夹里的文件也一并删除。此操作为逻辑删除
 	 * @param userFileList
 	 */
-	void delete(List<Long> userFileList);
+	void delete(List<String> userFileList);
 
 
 	/**
 	 * 恢复回收站文件
 	 * @param userFileId
 	 */
-	void recover(Long userFileId);
+	void recover(String userFileId);
 
 	/**
 	 * 批量恢复回收站文件
 	 * @param userFileIdList
 	 */
-	void recover(List<Long> userFileIdList);
+	void recover(List<String> userFileIdList);
 
 	/**
 	 * 真正的删除，从回收站里删除
 	 */
-	void deleteFromRecycleBin(Long userFileId);
+	void deleteFromRecycleBin(String userFileId);
 
 
 	/**
 	 * 真正的删除，从回收站里删除
 	 */
-	void deleteFromRecycleBin(List<Long> userFileIdList);
+	void deleteFromRecycleBin(List<String> userFileIdList);
 
 	/**
 	 * 分页查询出这个类型的文件
@@ -122,7 +122,7 @@ public interface UserFileService {
 	 * @param userId
 	 * @return
 	 */
-	public Map<Long, PathNodeVO> getPathTreeMap(Long userId);
+	public Map<String, PathNodeVO> getPathTreeMap(Long userId);
 
 	/**
 	 * 搜索文件
@@ -137,5 +137,5 @@ public interface UserFileService {
 	 * @param userId
 	 * @param fileId
 	 */
-	void checkImage(Long userId, Long fileId);
+	void checkImage(Long userId, String fileId);
 }

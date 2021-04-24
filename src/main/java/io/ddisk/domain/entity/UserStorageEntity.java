@@ -30,13 +30,13 @@ public class UserStorageEntity {
 	/**
 	 * 用户id
 	 */
-	@Column(name = "user_id")
+	@Column(name = "user_id", unique = true)
 	private Long userId;
 
 	/**
 	 * 已使用存储空间
 	 */
-	@Column(name = "used_storage")
+	@Column(name = "used_storage", nullable = false)
 	private Long usedStorage;
 
 	public UserStorageEntity(Long userId, Long usedStorage) {

@@ -18,7 +18,7 @@ public class FileVO {
 
 
 	@Schema(description = "用户文件id")
-	private Long id;
+	private String id;
 
 	@Schema(description ="用户文件名")
 	private String filename;
@@ -27,7 +27,7 @@ public class FileVO {
 	private String extension;
 
 	@Schema(description = "所在目录，根目录为null")
-	private Long pid;
+	private String pid;
 
 	@Schema(description = "文件大小")
 	private Long fileSize;

@@ -1,10 +1,10 @@
 package io.ddisk.domain.entity;
 
+import io.ddisk.utils.UUIDUtil;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -26,10 +26,8 @@ public class UserFileEntity implements Serializable {
 	 * 用户文件id
 	 */
 	@Id
-	@Column(name = "id")
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	@GenericGenerator(name = "native", strategy = "native")
-	private Long id;
+	@Column(name = "id", length = 32)
+	private String id = UUIDUtil.random32();
 
 	/**
 	 * 所属用户ID
@@ -52,8 +50,8 @@ public class UserFileEntity implements Serializable {
 	/**
 	 * 所在目录，根目录为null
 	 */
-	@Column(name = "pid")
-	private Long pid;
+	@Column(name = "pid", length = 32)
+	private String pid;
 
 	/**
 	 * 真正的文件，当为文件夹是，此处为Null
@@ -96,7 +94,7 @@ public class UserFileEntity implements Serializable {
 	 * @param pid       父目录ID
 	 * @param fileId  文件实体id
 	 */
-	public UserFileEntity(Long userId, String filename, String extension, Long pid, String fileId) {
+	public UserFileEntity(Long userId, String filename, String extension, String pid, String fileId) {
 		this.userId = userId;
 		this.filename = filename;
 		this.extension = extension;
@@ -115,7 +113,7 @@ public class UserFileEntity implements Serializable {
 	 * @param filename      文件夹名
 	 * @param pid       父目录ID
 	 */
-	public UserFileEntity(Long userId, String filename, Long pid) {
+	public UserFileEntity(Long userId, String filename, String pid) {
 		this.userId = userId;
 		this.filename = filename;
 		this.pid = pid;

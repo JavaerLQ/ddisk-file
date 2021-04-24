@@ -13,7 +13,7 @@ import java.util.Date;
 public class FileUploadDTO {
 
     @Schema(description = "文件夹ID")
-    private Long folderId;
+    private String folderId;
 
     @Schema(description = "上传时间")
     private Date uploadTime;

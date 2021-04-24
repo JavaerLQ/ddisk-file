@@ -204,7 +204,7 @@ public class UserServiceImpl implements UserService {
 	 * @param fileId
 	 */
 	@Override
-	public void setAvator(Long userId, Long fileId) {
+	public void setAvator(Long userId, String fileId) {
 		userFileService.checkImage(userId, fileId);
 		UserEntity userEntity = userRepository.findById(userId).orElseThrow(() -> new BizException(BizMessage.USER_NOT_EXIST));
 		userEntity.setImgUrl(fileId);

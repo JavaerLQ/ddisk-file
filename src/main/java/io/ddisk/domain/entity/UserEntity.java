@@ -44,13 +44,13 @@ public class UserEntity implements Serializable {
 	/**
 	 * 用户头像链接，指向UserFile的ID
 	 */
-	@Column(name = "image_file_id")
-	private Long imgUrl;
+	@Column(name = "image_file_id", length = 32)
+	private String imgUrl;
 
 	/**
 	 * 加密后的密码
 	 */
-	@Column(name = "password", nullable = false)
+	@Column(name = "password", nullable = false, length = 32)
 	private String password;
 
 

@@ -8,8 +8,6 @@ import io.ddisk.domain.enums.RoleEnum;
 import io.ddisk.domain.vo.UploadFileVO;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 /**
  * @Author: Richard.Lee
@@ -75,12 +73,12 @@ public interface FileService {
 	 * @param userFileId
 	 * @return 返回文件下载信息
 	 */
-	FileDTO getFileResource(Long userId, RoleEnum role, Long userFileId);
+	FileDTO getFileResource(Long userId, RoleEnum role, String userFileId);
 
 	/**
 	 * 获取略缩图
 	 * @param userFileId
 	 * @return
 	 */
-	FileDTO getThumbnail(Long userId, Long userFileId);
+	FileDTO getThumbnail(Long userId, String userFileId);
 }
