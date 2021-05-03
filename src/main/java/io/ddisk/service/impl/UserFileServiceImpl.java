@@ -236,7 +236,8 @@ public class UserFileServiceImpl implements UserFileService {
 	 * @param delete     如果是获取回收站文件及子文件true，获取非回收站文件false
 	 * @return
 	 */
-	private List<UserFileEntity> getChildrenList(List<String> userFileIdList, Boolean delete) {
+	@Override
+	public List<UserFileEntity> getChildrenList(List<String> userFileIdList, Boolean delete) {
 
 		List<UserFileEntity> userFileList = userFileRepository.findAllByIdInAndDelete(userFileIdList, delete);
 		List<UserFileEntity> result = new LinkedList<>(userFileList);

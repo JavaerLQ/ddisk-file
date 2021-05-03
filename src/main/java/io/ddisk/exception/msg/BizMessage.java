@@ -83,15 +83,15 @@ public enum BizMessage implements BaseMessage {
      * 文件分享
      */
     FILE_SHARE_INVALID(9000, "分享文件已失效"),
-    FILE_SHARE_EXPIRED(9001, "分享文件已过期"),
-    FILE_SHARE_MAX_TIMES(9002, "分享文件已达最大次数"),
     // 从回收站中删除
-    FILE_SHARE_ORIGIN_FILE_NOT_EXIST(9003, "分享文件源文件不存在"),
+    FILE_SHARE_ORIGIN_FILE_NOT_EXIST(9001, "分享文件源文件不存在"),
     // 分享文件在回收站中
-    FILE_SHARE_ORIGIN_FILE_DELETED(9004, "分享文件源文件已删除"),
-    FILE_SHARE_EXIST(9005, "该文件已经分享过了"),
-    FILE_SHARE_NOT_EXIST(9006, "该文件未被分享"),
-    FILE_SHARE_OWNER_ERROR(9007, "该文件并非您分享的噢"),
+    FILE_SHARE_ORIGIN_FILE_DELETED(9002, "分享文件源文件已删除"),
+    FILE_SHARE_EXIST(9003, "该文件已经分享过了"),
+    FILE_SHARE_NOT_EXIST(9004, "该文件未被分享"),
+    FILE_SHARE_OWNER_ERROR(9005, "这不是您的分享文件噢"),
+    FILE_SHARE_GROUP_NOT_EXIST(9006, "分享文件组不存在"),
+
     ;
     private Integer code;
     private String message;

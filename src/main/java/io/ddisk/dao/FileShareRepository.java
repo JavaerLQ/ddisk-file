@@ -1,8 +1,10 @@
 package io.ddisk.dao;
 
 import io.ddisk.domain.entity.FileShareEntity;
-import io.ddisk.domain.entity.UserFileEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @Author: Richard.Lee
@@ -10,5 +12,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface FileShareRepository extends JpaRepository<FileShareEntity, String> {
 
-	Boolean existsByUserFileEntity(UserFileEntity userFileEntity);
+	List<FileShareEntity> findAllByPidIn(Collection<String> pids);
+
+	List<FileShareEntity> findAllByFileShareGroupIdIn(Collection<String> shareGroupIds);
 }

@@ -50,7 +50,7 @@ public class UserEntity implements Serializable {
 	/**
 	 * 加密后的密码
 	 */
-	@Column(name = "password", nullable = false, length = 32)
+	@Column(name = "password", nullable = false, length = 64)
 	private String password;
 
 

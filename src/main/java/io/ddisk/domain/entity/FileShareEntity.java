@@ -4,9 +4,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @Author: Richard.Lee
@@ -22,18 +24,28 @@ public class FileShareEntity {
 
 	@Id
 	@Column(name = "file_share_id", length = 32)
-	@GeneratedValue(generator="system-uuid")
-	@GenericGenerator(name="system-uuid", strategy="uuid")
 	private String shareId;
 
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "user_file_id", unique = true, nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-	private UserFileEntity userFileEntity;
+	@Column(name = "user_file_id", nullable = false)
+	private String userFileId;
 
+	@Column(name = "file_name", nullable = false)
+	private String filename;
+
+	@Column(name = "file_extension", nullable = true)
+	private String extension;
+
+	@Column(name = "is_dir", nullable = false)
+	private Boolean dir;
 
 	@Column(name = "share_group_id", length = 32)
 	private String fileShareGroupId;
 
+	/**
+	 * 父目录id，最上层文件null
+	 */
+	@Column(name = "share_pid", length = 32)
+	private String pid;
 	/**
 	 * 下载次数
 	 */

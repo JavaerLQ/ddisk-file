@@ -1,10 +1,10 @@
 package io.ddisk.domain.entity;
 
+import io.ddisk.utils.UUIDUtil;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -23,14 +23,12 @@ public class FileShareGroupEntity {
 
 	@Id
 	@Column(name = "group_id", length = 32)
-	@GeneratedValue(generator="system-uuid")
-	@GenericGenerator(name="system-uuid", strategy="uuid")
-	private String id;
+	private String id = UUIDUtil.random32();
 
 	/**
 	 * 到期时间，为空表示永不过期
 	 */
-	@Column(name = "due_date")
+	@Column(name = "due_date", nullable = true)
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date dueDate;
 

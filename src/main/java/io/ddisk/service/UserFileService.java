@@ -1,6 +1,7 @@
 package io.ddisk.service;
 
 import io.ddisk.domain.dto.PageDTO;
+import io.ddisk.domain.entity.UserFileEntity;
 import io.ddisk.domain.enums.FileTypeEnum;
 import io.ddisk.domain.vo.DirTreeNode;
 import io.ddisk.domain.vo.FileVO;
@@ -138,4 +139,13 @@ public interface UserFileService {
 	 * @param fileId
 	 */
 	void checkImage(Long userId, String fileId);
+
+	/**
+	 * 获取这些文件或者目录及子文件、子目录
+	 *
+	 * @param userFileIdList
+	 * @param delete     如果是获取回收站文件及子文件true，获取非回收站文件false
+	 * @return
+	 */
+	List<UserFileEntity> getChildrenList(List<String> userFileIdList, Boolean delete);
 }
