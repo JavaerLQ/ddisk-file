@@ -3,8 +3,10 @@ package io.ddisk.domain.dto;
 import io.ddisk.domain.entity.FileShareGroupEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.beans.BeanUtils;
 
+import javax.validation.constraints.NotEmpty;
 import java.util.Date;
 import java.util.List;
 
@@ -20,10 +22,12 @@ public class FileShareDTO {
 	 * {@link io.ddisk.domain.entity.UserFileEntity} 的 ID
 	 */
 	@Schema(description = "用户文件Id，可以是文件也可以是文件夹", required = true)
+	@NotEmpty
 	private List<String> userFileIds;
 	@Schema(description = "截至时间，不传为不限时间", nullable = true, required = false)
 	private Date dueDate;
-	@Schema(description = "分享密钥", nullable = true, required = false)
+	@Schema(description = "6位分享密钥", nullable = true, required = false)
+	@Length(min = 6, max = 6)
 	private String key;
 	@Schema(description = "允许匿名下载", nullable = false, required = true)
 	private Boolean anonymousDownload;

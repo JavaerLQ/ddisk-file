@@ -13,8 +13,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotBlank;
@@ -28,6 +30,7 @@ import java.util.Map;
  * @author Richard.Lee
  */
 @Tag(name = "File", description = "该接口为文件接口，主要用来做一些文件的基本操作，如创建目录，删除，移动，复制等。")
+@Validated
 @RestController
 @RequestMapping("/file")
 public class FileController {
@@ -41,7 +44,7 @@ public class FileController {
 	@Parameters({
 			@Parameter(name = "pid", description = "用户文件目录id，需要登录用户的文件", required = true)
 	})
-	public ResponseEntity<PageVO<FileVO>> getFileList(@NotNull PageDTO page, @RequestParam(required = false) String pid) {
+	public ResponseEntity<PageVO<FileVO>> getFileList(@NotNull PageDTO page, @NotBlank @Length(min = 32, max = 32) @RequestParam(required = false) String pid) {
 
 		LoginUser user = SpringWebUtils.requireLogin();
 		PageVO<FileVO> fileListPage = userFileService.listTheDir(user.getId(), pid, page);
@@ -53,7 +56,7 @@ public class FileController {
 	@Parameters({
 			@Parameter(name = "fileType", description = "文件类型，图片文件，视频文件等", required = true)
 	})
-	public ResponseEntity<PageVO<FileVO>> getFileListByType(@NotNull PageDTO page, FileTypeEnum fileType) {
+	public ResponseEntity<PageVO<FileVO>> getFileListByType(@NotNull PageDTO page, @NotNull FileTypeEnum fileType) {
 
 		LoginUser user = SpringWebUtils.requireLogin();
 		PageVO<FileVO> fileListPage = userFileService.listTheTypeFile(user.getId(), fileType, page);
@@ -104,7 +107,7 @@ public class FileController {
 			@Parameter(name = "from", description = "移动文件id", required = true),
 			@Parameter(name = "to", description = "目标文件夹id", required = true)
 	})
-	public ResponseEntity<Void> move(@NotBlank String from, @RequestParam(required = false) String to) {
+	public ResponseEntity<Void> move(@NotBlank @Length(min = 32, max = 32) String from, @Length(min = 32, max = 32) @RequestParam(required = false) String to) {
 
 		userFileService.move(from, to);
 		return ResponseEntity.ok().build();
@@ -116,7 +119,7 @@ public class FileController {
 			@Parameter(name = "from", description = "移动文件id列表", required = true),
 			@Parameter(name = "to", description = "目标文件夹id", required = true)
 	})
-	public ResponseEntity<Void> batchMove(@RequestParam(value = "from") @NotEmpty @NotBlank List<String> from, @NotBlank @RequestParam(required = false) String to) {
+	public ResponseEntity<Void> batchMove(@RequestParam(value = "from") @NotEmpty List<String> from, @Length(min = 32, max = 32)@RequestParam(required = false) String to) {
 
 		userFileService.move(from, to);
 		return ResponseEntity.ok().build();
@@ -129,7 +132,7 @@ public class FileController {
 			@Parameter(name = "name", description = "目录名", required = true),
 
 	})
-	public ResponseEntity<Void> mkdir(@RequestParam(required = false) @NotBlank String pid, @NotBlank String name) {
+	public ResponseEntity<Void> mkdir(@RequestParam(required = false) @NotBlank @Length(min = 32, max = 32) String pid, @NotBlank String name) {
 		LoginUser user = SpringWebUtils.requireLogin();
 		userFileService.mkdir(user.getId(), pid, name);
 		return ResponseEntity.ok().build();
@@ -143,7 +146,7 @@ public class FileController {
 			@Parameter(name = "extension", description = "文件扩展名", required = true),
 
 	})
-	public ResponseEntity<Void> rename(@NotBlank String userFileId, @NotBlank String filename, String extension) {
+	public ResponseEntity<Void> rename(@NotBlank @Length(min = 32, max = 32) String userFileId, @NotBlank String filename, String extension) {
 		userFileService.rename(userFileId, filename, extension);
 		return ResponseEntity.ok().build();
 	}
@@ -153,7 +156,7 @@ public class FileController {
 	@Parameters({
 			@Parameter(name = "userFileId", description = "文件id", required = true),
 	})
-	public ResponseEntity<Void> delete(@NotBlank String userFileId) {
+	public ResponseEntity<Void> delete(@NotBlank @Length(min = 32, max = 32) String userFileId) {
 		userFileService.delete(userFileId);
 		return ResponseEntity.ok().build();
 	}
@@ -163,7 +166,7 @@ public class FileController {
 	@Parameters({
 			@Parameter(name = "userFileIds", description = "文件id列表", required = true),
 	})
-	public ResponseEntity<Void> batchDelete(@NotEmpty @NotBlank @RequestParam(value = "userFileIds") List<String> userFileIds) {
+	public ResponseEntity<Void> batchDelete(@NotEmpty @RequestParam(value = "userFileIds") List<String> userFileIds) {
 		userFileService.delete(userFileIds);
 		return ResponseEntity.ok().build();
 	}
@@ -173,7 +176,7 @@ public class FileController {
 	@Parameters({
 			@Parameter(name = "userFileId", description = "文件id", required = true),
 	})
-	public ResponseEntity<Void> recover(@NotBlank String userFileId) {
+	public ResponseEntity<Void> recover(@NotBlank @Length(min = 32, max = 32) String userFileId) {
 		userFileService.recover(userFileId);
 		return ResponseEntity.ok().build();
 	}
@@ -183,7 +186,7 @@ public class FileController {
 	@Parameters({
 			@Parameter(name = "userFileIds", description = "文件id列表", required = true),
 	})
-	public ResponseEntity<Void> batchRecover(@NotEmpty @NotBlank @RequestParam(value = "userFileIds") List<String> userFileIds) {
+	public ResponseEntity<Void> batchRecover(@NotEmpty @RequestParam(value = "userFileIds") List<String> userFileIds) {
 		userFileService.recover(userFileIds);
 		return ResponseEntity.ok().build();
 	}
@@ -193,7 +196,7 @@ public class FileController {
 	@Parameters({
 			@Parameter(name = "userFileId", description = "文件id", required = true),
 	})
-	public ResponseEntity<Void> deleteFromRecycleBin(@NotBlank String userFileId) {
+	public ResponseEntity<Void> deleteFromRecycleBin(@NotBlank @Length(min = 32, max = 32) String userFileId) {
 		userFileService.deleteFromRecycleBin(userFileId);
 		return ResponseEntity.ok().build();
 	}
@@ -203,7 +206,7 @@ public class FileController {
 	@Parameters({
 			@Parameter(name = "userFileIds", description = "文件id列表", required = true),
 	})
-	public ResponseEntity<Void> batchDeleteFromRecycleBin(@RequestParam(value = "userFileIds") @NotNull @NotBlank List<String> userFileIds) {
+	public ResponseEntity<Void> batchDeleteFromRecycleBin(@RequestParam(value = "userFileIds") @NotEmpty List<String> userFileIds) {
 		userFileService.deleteFromRecycleBin(userFileIds);
 		return ResponseEntity.ok().build();
 	}

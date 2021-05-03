@@ -4,6 +4,7 @@ import io.ddisk.dao.FileRepository;
 import io.ddisk.dao.FileShareGroupRepository;
 import io.ddisk.dao.FileShareRepository;
 import io.ddisk.dao.UserFileRepository;
+import io.ddisk.domain.dto.FileDTO;
 import io.ddisk.domain.dto.FileShareDTO;
 import io.ddisk.domain.entity.FileEntity;
 import io.ddisk.domain.entity.FileShareEntity;
@@ -16,17 +17,20 @@ import io.ddisk.service.FileShareService;
 import io.ddisk.service.UserFileService;
 import io.ddisk.service.UserStorageService;
 import io.ddisk.utils.SDateUtils;
+import io.ddisk.utils.SpringWebUtils;
 import io.ddisk.utils.UUIDUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
+ * 文件分享业务逻辑
  * @Author: Richard.Lee
  * @Date: created by 2021/4/21
  */
@@ -113,15 +117,7 @@ public class FileShareServiceImpl implements FileShareService {
 	public void cancelShareFile(String shareId, Long userId) {
 		fileShareRepository.findById(shareId).ifPresent(fileShareEntity -> {
 			FileShareGroupEntity fileShareGroupEntity = fileShareGroupRepository.findById(fileShareEntity.getFileShareGroupId()).orElseThrow(() -> new BizException(BizMessage.FILE_SHARE_GROUP_NOT_EXIST));
-
-			if (!isValidGroup(fileShareGroupEntity)){
-				log.warn("用户[{}]操作的分享文件组[{}]已失效", userId, fileShareGroupEntity.getId());
-				throw new BizException(BizMessage.FILE_SHARE_INVALID);
-			}
-			if (!userId.equals(fileShareGroupEntity.getUserId())){
-				log.warn("用户[{}]正在操作用户[{}]的分享文件[{}]", userId, fileShareGroupEntity.getUserId(), shareId);
-				throw new BizException(BizMessage.FILE_SHARE_OWNER_ERROR);
-			}
+			checkShareGroup(fileShareGroupEntity, userId);
 			fileShareRepository.delete(fileShareEntity);
 		});
 	}
@@ -139,17 +135,8 @@ public class FileShareServiceImpl implements FileShareService {
 		Set<String> shareGroupIdSet = fileShareEntityList.stream().map(FileShareEntity::getFileShareGroupId).collect(Collectors.toSet());
 		List<FileShareGroupEntity> shareGroupEntityList = fileShareGroupRepository.findAllById(shareGroupIdSet);
 
-		shareGroupEntityList.stream().filter(fileShareGroupEntity -> !userId.equals(fileShareGroupEntity.getUserId())).findAny().ifPresent(fileShareGroupEntity -> {
-			log.warn("用户[{}]正在操作用户[{}]的分享文件", userId, fileShareGroupEntity.getUserId());
-			throw new BizException(BizMessage.FILE_SHARE_OWNER_ERROR);
-		});
-
 		// 查找失效的分享
-		shareGroupEntityList.stream().filter(fileShareGroupEntity -> !isValidGroup(fileShareGroupEntity)).findFirst().ifPresent(fileShareGroupEntity -> {
-			log.warn("用户[{}]操作的分享文件组[{}]已失效", userId, fileShareGroupEntity.getId());
-			throw new BizException(BizMessage.FILE_SHARE_INVALID);
-		});
-
+		shareGroupEntityList.forEach(sge->checkShareGroup(sge, userId));
 		fileShareRepository.deleteAll(fileShareEntityList);
 	}
 
@@ -162,14 +149,9 @@ public class FileShareServiceImpl implements FileShareService {
 	@Override
 	public void cancelShareGroup(String shareGroupId, Long userId) {
 		fileShareGroupRepository.findById(shareGroupId).ifPresent(fileShareGroupEntity -> {
-			if (!userId.equals(fileShareGroupEntity.getUserId())){
-				log.warn("用户[{}]正在操作用户[{}]的分享文件", userId, fileShareGroupEntity.getUserId());
-				throw new BizException(BizMessage.FILE_SHARE_OWNER_ERROR);
-			}
-			if (isValidGroup(fileShareGroupEntity)){
-				fileShareGroupEntity.setActive(false);
-				fileShareGroupRepository.save(fileShareGroupEntity);
-			}
+			checkShareGroup(fileShareGroupEntity, userId);
+			fileShareGroupEntity.setActive(false);
+			fileShareGroupRepository.save(fileShareGroupEntity);
 		});
 	}
 
@@ -181,14 +163,7 @@ public class FileShareServiceImpl implements FileShareService {
 	public void batchCancelShareGroup(List<String> shareGroupIds, Long userId) {
 		List<FileShareGroupEntity> shareGroupEntityList = fileShareGroupRepository.findAllById(shareGroupIds);
 		shareGroupEntityList.forEach(fileShareGroupEntity -> {
-			if (!userId.equals(fileShareGroupEntity.getUserId())){
-				log.warn("用户[{}]正在操作用户[{}]的分享文件", userId, fileShareGroupEntity.getUserId());
-				throw new BizException(BizMessage.FILE_SHARE_OWNER_ERROR);
-			}
-			if (!isValidGroup(fileShareGroupEntity)){
-				log.warn("用户[{}]操作的分享文件组[{}]已失效", userId, fileShareGroupEntity.getId());
-				throw new BizException(BizMessage.FILE_SHARE_INVALID);
-			}
+			checkShareGroup(fileShareGroupEntity, userId);
 			fileShareGroupEntity.setActive(false);
 		});
 		fileShareGroupRepository.saveAll(shareGroupEntityList);
@@ -196,36 +171,23 @@ public class FileShareServiceImpl implements FileShareService {
 
 	/**
 	 * 保存分享文件
-	 *  @param shareIds
+	 * @param shareIds
 	 * @param userId
+	 * @param key
 	 */
 	@Override
-	public void saveShareFile(List<String> shareIds, String pid, Long userId) {
-		if (Objects.nonNull(pid)){
-			userFileRepository.findById(pid).ifPresent(uf->{
-				if (!uf.getUserId().equals(userId)){
-					log.warn("非法操作, 用户[{}]保存文件到他人目录[{}]", userId, pid);
-					throw new BizException(BizMessage.USER_FILE_NOT_ACCESS);
-				}
-				if (!uf.getDir()){
-					log.warn("[{}]不是一个正确的目录", pid);
-					throw new BizException(BizMessage.USER_FILE_NOT_DIR);
-				}
-			});
-		}
-
+	public void saveShareFile(List<String> shareIds, String pid, Long userId, String key) {
+		checkPid(pid, userId);
 		Set<String> shareGroupIdSet = fileShareRepository.findAllById(shareIds).stream().map(FileShareEntity::getFileShareGroupId).collect(Collectors.toSet());
-		List<FileShareGroupEntity> shareGroupEntityList = fileShareGroupRepository.findAllById(shareGroupIdSet);
-		shareGroupEntityList.stream().filter(fileShareGroupEntity -> !isValidGroup(fileShareGroupEntity)).findFirst().ifPresent(fileShareGroupEntity -> {
-			log.warn("用户[{}]保存失效的分享[{}]", userId, fileShareGroupEntity);
-			throw new BizException(BizMessage.FILE_SHARE_INVALID);
-		});
+		if (CollectionUtils.isEmpty(shareGroupIdSet)){
+			throw new BizException(BizMessage.FILE_SHARE_GROUP_NOT_EXIST);
+		}
+		fileShareGroupRepository.findAllById(shareGroupIdSet).forEach(fsg->checkShareGroup(fsg, key));
 
 		// 组下的所有分享文件
 		List<FileShareEntity> allShareFiles = fileShareRepository.findAllByFileShareGroupIdIn(shareGroupIdSet);
 		Map<String, FileShareEntity> shareFileMap = allShareFiles.stream().collect(Collectors.toMap(FileShareEntity::getShareId, fse -> fse));
-		Set<String> userFileIds = allShareFiles.stream().map(FileShareEntity::getUserFileId).collect(Collectors.toSet());
-		List<UserFileEntity> userFileEntityList = userFileRepository.findAllById(userFileIds);
+		List<UserFileEntity> userFileEntityList = userFileRepository.findAllById(allShareFiles.stream().map(FileShareEntity::getUserFileId).collect(Collectors.toSet()));
 		Map<String, UserFileEntity> userFileMap = userFileEntityList.stream().collect(Collectors.toMap(UserFileEntity::getId, uf -> uf));
 
 		List<String> fileIds = userFileEntityList.stream().filter(uf->!uf.getDir()&&!uf.getDelete()).map(UserFileEntity::getFileId).collect(Collectors.toList());
@@ -256,12 +218,13 @@ public class FileShareServiceImpl implements FileShareService {
 		});
 
 		List<UserFileEntity> newUserFileList = toSaveShareFiles.stream().map(fse->{
+			sCountPlusOne(fse);
 			UserFileEntity fromUserFile = userFileMap.get(fse.getUserFileId());
 			UserFileEntity toUserFile = new UserFileEntity();
 
 			BeanUtils.copyProperties(fromUserFile, toUserFile);
 			toUserFile.setFilename(fse.getFilename());
-			toUserFile.setFilename(fse.getExtension());
+			toUserFile.setExtension(fse.getExtension());
 			toUserFile.setUserId(userId);
 			toUserFile.setId(fse.getShareId());
 			toUserFile.setPid(fse.getPid());
@@ -271,7 +234,7 @@ public class FileShareServiceImpl implements FileShareService {
 		newUserFileList.forEach(userFileEntity -> {
 			String id = UUIDUtil.random32();
 			if (shareIds.contains(userFileEntity.getId())){
-				userFileEntity.setPid(null);
+				userFileEntity.setPid(pid);
 			}
 			if (userFileEntity.getDir()){
 				newUserFileList.stream().filter(uf->userFileEntity.getId().equals(uf.getPid())).forEach(uf->{
@@ -284,6 +247,8 @@ public class FileShareServiceImpl implements FileShareService {
 			}
 			userFileEntity.setId(id);
 		});
+		userFileRepository.saveAll(newUserFileList);
+		fileShareRepository.saveAll(toSaveShareFiles);
 	}
 
 	/**
@@ -299,6 +264,26 @@ public class FileShareServiceImpl implements FileShareService {
 				addChildrenToList(fse.getShareId(), all, to);
 			}
 		});
+	}
+
+	/**
+	 * 校验是否为有效pid
+	 * @param pid
+	 * @param userId
+	 */
+	private void checkPid(String pid, Long userId){
+		if (Objects.nonNull(pid)){
+			userFileRepository.findById(pid).ifPresentOrElse(uf->{
+				if (!uf.getUserId().equals(userId)){
+					log.warn("非法操作, 用户[{}]保存文件到他人目录[{}]", userId, pid);
+					throw new BizException(BizMessage.USER_FILE_NOT_ACCESS);
+				}
+				if (!uf.getDir()){
+					log.warn("[{}]不是一个正确的目录", pid);
+					throw new BizException(BizMessage.USER_FILE_NOT_DIR);
+				}
+			}, ()->{throw new BizException(BizMessage.USER_DIR_NOT_EXIST);});
+		}
 	}
 	/**
 	 * 保存次数+1
@@ -319,11 +304,48 @@ public class FileShareServiceImpl implements FileShareService {
 	}
 
 	/**
-	 * 如果该分享组未失效返回true，否则返回false
-	 * @param fileShareGroupEntity
+	 * 获取分享文件下载
+	 *
+	 * @param shareId
 	 * @return
 	 */
-	private boolean isValidGroup(FileShareGroupEntity fileShareGroupEntity){
-		return fileShareGroupEntity.getActive() && SDateUtils.nowBefore(fileShareGroupEntity.getDueDate());
+	@Override
+	public FileDTO getFileResource(String shareId) {
+		FileShareEntity fileShareEntity = fileShareRepository.findById(shareId).orElseThrow(() -> new BizException(BizMessage.FILE_SHARE_NOT_EXIST));
+		FileShareGroupEntity fileShareGroupEntity = fileShareGroupRepository.findById(fileShareEntity.getFileShareGroupId()).orElseThrow(() -> new BizException(BizMessage.FILE_SHARE_GROUP_NOT_EXIST));
+		checkShareGroup(fileShareGroupEntity);
+		if (!fileShareGroupEntity.getAnonymousDownload()){
+			throw new BizException(BizMessage.FILE_SHARE_REFUSE_DOWNLOAD);
+		}
+		return fileService.getFileResource(fileShareGroupEntity.getUserId(), null, fileShareEntity.getUserFileId());
+	}
+
+	/**
+	 * 如果该分享组未失效返回true，否则返回false
+	 * @param fileShareGroupEntity
+	 * @param key
+	 * @return
+	 */
+	private void checkShareGroup(FileShareGroupEntity fileShareGroupEntity, String key){
+		if (Objects.nonNull(fileShareGroupEntity.getKey()) && !key.equals(fileShareGroupEntity.getKey())){
+			log.warn("用户[{}]操作的的分享文件[{}]的令牌不正确", SpringWebUtils.getRequestUser(), fileShareGroupEntity);
+			throw new BizException(BizMessage.FILE_SHARE_KEY_ERROR);
+		}
+		checkShareGroup(fileShareGroupEntity);
+	}
+
+	private void checkShareGroup(FileShareGroupEntity fileShareGroupEntity, Long userId){
+		if (!userId.equals(fileShareGroupEntity.getUserId())){
+			log.warn("用户[{}]正在操作用户[{}]的分享文件[{}]", SpringWebUtils.requireLogin().getUsername(), fileShareGroupEntity.getUserId(), fileShareGroupEntity);
+			throw new BizException(BizMessage.FILE_SHARE_OWNER_ERROR);
+		}
+		checkShareGroup(fileShareGroupEntity);
+	}
+
+	private void checkShareGroup(FileShareGroupEntity fileShareGroupEntity){
+		if (!(fileShareGroupEntity.getActive() && SDateUtils.nowBefore(fileShareGroupEntity.getDueDate()))){
+			log.warn("分享文件组[{}]已失效", fileShareGroupEntity);
+			throw new BizException(BizMessage.FILE_SHARE_INVALID);
+		}
 	}
 }

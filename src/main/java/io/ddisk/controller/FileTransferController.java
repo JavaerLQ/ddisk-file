@@ -6,6 +6,7 @@ import io.ddisk.domain.dto.MergeFileDTO;
 import io.ddisk.domain.vo.LoginUser;
 import io.ddisk.domain.vo.UploadFileVO;
 import io.ddisk.service.FileService;
+import io.ddisk.service.FileShareService;
 import io.ddisk.utils.ResponseUtils;
 import io.ddisk.utils.SpringWebUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jodd.bean.BeanCopy;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -30,11 +32,15 @@ import java.util.Collection;
 @Slf4j
 @Tag(name = "FileTransfer", description = "该接口为文件传输接口，主要用来做文件的上传和下载")
 @RequestMapping("transfer")
+@Validated
 @RestController
 public class FileTransferController {
 
     @Autowired
     private FileService fileService;
+
+    @Autowired
+    private FileShareService fileShareService;
 
     @Operation(summary = "极速上传", description = "校验文件MD5判断文件是否存在，如果存在直接上传成功并返回skipUpload=true，如果不存在返回skipUpload=false")
     @GetMapping("upload")
@@ -60,10 +66,21 @@ public class FileTransferController {
     @Parameters({
             @Parameter(name = "userFileId", description = "用户文件id，需要登录用户的文件", required = true)
     })
-    public void downloadFile(@PathVariable @NotBlank String userFileId){
+    public void downloadFile(@PathVariable @NotBlank @Length(min = 32, max = 32) String userFileId){
 
         LoginUser user = SpringWebUtils.requireLogin();
         FileDTO fileDTO = fileService.getFileResource(user.getId(), user.getRole(), userFileId);
+        ResponseUtils.sendFile(fileDTO);
+    }
+
+    @Operation(summary = "下载文件", description = "文件下载接口，保证文件安全，阻止非法用户下载")
+    @GetMapping("/anonymous/download/{shareId}")
+    @Parameters({
+            @Parameter(name = "userFileId", description = "用户文件id，需要登录用户的文件", required = true)
+    })
+    public void anonymousDownloadFile(@PathVariable @NotBlank @Length(min = 32, max = 32) String shareId){
+
+        FileDTO fileDTO = fileShareService.getFileResource(shareId);
         ResponseUtils.sendFile(fileDTO);
     }
 
@@ -73,7 +90,7 @@ public class FileTransferController {
     @Parameters({
             @Parameter(name = "userFileId", description = "用户文件id，需要登录用户的文件", required = true)
     })
-    public void thumbnail(@PathVariable @NotBlank String userFileId){
+    public void thumbnail(@PathVariable @NotBlank @Length(min = 32, max = 32) String userFileId){
 
         LoginUser user = SpringWebUtils.requireLogin();
         FileDTO fileDTO = fileService.getThumbnail(user.getId(), userFileId);

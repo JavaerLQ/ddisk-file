@@ -27,6 +27,7 @@ import javax.validation.constraints.NotBlank;
  */
 @Tag(name = "User", description = "该接口为用户接口，主要做用户登录，注册和校验token")
 @RequestMapping("user")
+@Validated
 @RestController
 public class UserController {
 
@@ -40,7 +41,7 @@ public class UserController {
 	@Parameters({
 			@Parameter(name = "email", description = "用户邮箱", required = true)
 	})
-	public ResponseEntity<Void> sendRegisterToken(@NotBlank @Email String email) {
+	public ResponseEntity<Void> sendRegisterToken(@Email String email) {
 
 		userService.sendEmailToRegister(email);
 		return ResponseEntity.ok().build();

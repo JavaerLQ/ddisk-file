@@ -1,5 +1,6 @@
 package io.ddisk.service;
 
+import io.ddisk.domain.dto.FileDTO;
 import io.ddisk.domain.dto.FileShareDTO;
 import io.ddisk.domain.entity.FileShareEntity;
 
@@ -46,8 +47,9 @@ public interface FileShareService {
 	 * 保存分享文件
 	 * @param shareIds
 	 * @param userId
+	 * @param key
 	 */
-	void saveShareFile(List<String> shareIds, String pid, Long userId);
+	void saveShareFile(List<String> shareIds, String pid, Long userId, String key);
 
 	/**
 	 * 保存次数+1
@@ -60,4 +62,11 @@ public interface FileShareService {
 	 * @return
 	 */
 	void dCountPlusOne(FileShareEntity fileShareEntity);
+
+	/**
+	 * 获取分享文件下载
+	 * @param shareId
+	 * @return
+	 */
+	FileDTO getFileResource(String shareId);
 }

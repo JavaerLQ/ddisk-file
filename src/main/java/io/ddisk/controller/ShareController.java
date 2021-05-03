@@ -6,10 +6,13 @@ import io.ddisk.service.FileShareService;
 import io.ddisk.utils.SpringWebUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
 /**
@@ -18,6 +21,7 @@ import java.util.List;
  */
 @Tag(name = "FileShare", description = "该接口为用户文件分享接口，主要是做用户文件分享，删除，下载等操作")
 @RestController
+@Validated
 @RequestMapping("/share")
 public class ShareController {
 
@@ -33,32 +37,32 @@ public class ShareController {
 	}
 
 	@Operation(summary = "移除分享文件", description = "取消分享", tags = {"fileShare"})
-	@GetMapping(value = "/cancel/file")
-	public ResponseEntity<Void> cancelShareFile(String shareId){
+	@PostMapping(value = "/cancel/file")
+	public ResponseEntity<Void> cancelShareFile(@Length(min = 32, max = 32) String shareId){
 		LoginUser user = SpringWebUtils.requireLogin();
 		fileShareService.cancelShareFile(shareId, user.getId());
 		return ResponseEntity.ok().build();
 	}
 
 	@Operation(summary = "移除分享文件", description = "批量取消分享", tags = {"fileShare"})
-	@GetMapping(value = "/batch/cancel/file")
-	public ResponseEntity<Void> batchCancelShareFile(@RequestParam(name = "shareIds") List<String> shareIds){
+	@PostMapping(value = "/batch/cancel/file")
+	public ResponseEntity<Void> batchCancelShareFile(@RequestParam(name = "shareIds")@NotEmpty List<String> shareIds){
 		LoginUser user = SpringWebUtils.requireLogin();
 		fileShareService.batchCancelShareFile(shareIds, user.getId());
 		return ResponseEntity.ok().build();
 	}
 
 	@Operation(summary = "取消分享文件组", description = "取消分享组", tags = {"fileShare"})
-	@GetMapping(value = "/cancel/group")
-	public ResponseEntity<Void> cancelShareGroup(String shareGroupId){
+	@PostMapping(value = "/cancel/group")
+	public ResponseEntity<Void> cancelShareGroup(@Length(min = 32, max = 32)String shareGroupId){
 		LoginUser user = SpringWebUtils.requireLogin();
 		fileShareService.cancelShareGroup(shareGroupId, user.getId());
 		return ResponseEntity.ok().build();
 	}
 
 	@Operation(summary = "取消分享文件组", description = "批量取消分享组", tags = {"fileShare"})
-	@GetMapping(value = "/batch/cancel/group")
-	public ResponseEntity<Void> batchCancelShareGroup(@RequestParam(name = "shareGroupIds") List<String> shareGroupIds){
+	@PostMapping(value = "/batch/cancel/group")
+	public ResponseEntity<Void> batchCancelShareGroup(@RequestParam(name = "shareGroupIds") @NotEmpty List<String> shareGroupIds){
 		LoginUser user = SpringWebUtils.requireLogin();
 		fileShareService.batchCancelShareGroup(shareGroupIds, user.getId());
 		return ResponseEntity.ok().build();
@@ -66,18 +70,18 @@ public class ShareController {
 
 
 	@Operation(summary = "保存分享文件", description = "保存分享文件", tags = {"fileShare"})
-	@GetMapping(value = "/save")
-	public ResponseEntity<Void> saveShareFile(String shareId, String pid){
+	@PostMapping(value = "/save")
+	public ResponseEntity<Void> saveShareFile(@Length(min = 32, max = 32) String shareId, @Length(min = 32, max = 32) String pid, @Length(min = 6, max = 6)String key){
 		LoginUser user = SpringWebUtils.requireLogin();
-		fileShareService.saveShareFile(List.of(shareId), pid, user.getId());
+		fileShareService.saveShareFile(List.of(shareId), pid, user.getId(), key);
 		return ResponseEntity.ok().build();
 	}
 
 	@Operation(summary = "保存分享文件", description = "批量保存分享文件", tags = {"fileShare"})
-	@GetMapping(value = "/batch/save")
-	public ResponseEntity<Void> batchSaveShareFile(@RequestParam(name = "shareGroupIds") List<String> shareIds, String pid){
+	@PostMapping(value = "/batch/save")
+	public ResponseEntity<Void> batchSaveShareFile(@RequestParam(value = "shareIds") @NotEmpty List<String> shareIds, @Length(min = 32, max = 32) String pid, @Length(min = 6, max = 6) String key){
 		LoginUser user = SpringWebUtils.requireLogin();
-		fileShareService.saveShareFile(shareIds, pid, user.getId());
+		fileShareService.saveShareFile(shareIds, pid, user.getId(), key);
 		return ResponseEntity.ok().build();
 	}
 }

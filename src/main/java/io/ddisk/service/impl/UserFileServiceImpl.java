@@ -15,6 +15,7 @@ import io.ddisk.exception.msg.BizMessage;
 import io.ddisk.service.UserFileService;
 import io.ddisk.service.UserStorageService;
 import io.ddisk.utils.FileUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
  * @Author: Richard.Lee
  * @Date: created by 2021/3/25
  */
+@Slf4j
 @Service
 @Transactional(rollbackFor = Throwable.class)
 public class UserFileServiceImpl implements UserFileService {
@@ -108,6 +110,10 @@ public class UserFileServiceImpl implements UserFileService {
 	@Override
 	public void move(String from, String to) {
 		checkTargetDir(to);
+		if (from.equals(to)){
+			log.warn("移动文件与目标文件夹相同, [{}->{}]", from, to);
+			throw new BizException(BizMessage.FILE_MOVE_FAIL);
+		}
 		UserFileEntity fromFile = userFileRepository.findByIdAndDelete(from, false).orElseThrow(() -> new BizException(BizMessage.USER_DIR_NOT_EXIST));
 		fromFile.setPid(to);
 		userFileRepository.save(fromFile);
@@ -122,6 +128,10 @@ public class UserFileServiceImpl implements UserFileService {
 	@Override
 	public void move(List<String> fromList, String to) {
 		checkTargetDir(to);
+		if (fromList.contains(to)){
+			log.warn("移动文件与目标文件夹相同, [{}->{}]", fromList, to);
+			throw new BizException(BizMessage.FILE_MOVE_FAIL);
+		}
 		userFileRepository.updatePidByIdInAndPid(fromList, to);
 	}
 

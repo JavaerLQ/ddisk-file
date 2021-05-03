@@ -91,8 +91,9 @@ public enum BizMessage implements BaseMessage {
     FILE_SHARE_NOT_EXIST(9004, "该文件未被分享"),
     FILE_SHARE_OWNER_ERROR(9005, "这不是您的分享文件噢"),
     FILE_SHARE_GROUP_NOT_EXIST(9006, "分享文件组不存在"),
-
+    FILE_SHARE_REFUSE_DOWNLOAD(9007, "分享文件未开放下载权限"),
+    FILE_SHARE_KEY_ERROR(9008, "分享文件令牌有误"),
     ;
-    private Integer code;
+	private Integer code;
     private String message;
 }
