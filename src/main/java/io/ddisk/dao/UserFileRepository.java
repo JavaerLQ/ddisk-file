@@ -31,7 +31,7 @@ public interface UserFileRepository extends JpaRepository<UserFileEntity, String
 
 	List<UserFileEntity> findAllByPidInAndDelete(List<String> pids, Boolean delete);
 
-	Page<UserFileEntity> findAllByUserIdAndPidAndDelete(Long userId, String pid, Boolean delete, Pageable pageable);
+	Page<UserFileEntity> findAllByUserIdAndPidAndDeleteOrderByDirDesc(Long userId, String pid, Boolean delete, Pageable pageable);
 
 	/**
 	 * 分页查询非回收站文件列表，根据用户id和扩展名集合

@@ -84,8 +84,7 @@ public class UserFileServiceImpl implements UserFileService {
 	@Override
 	public PageVO<FileVO> listTheDir(Long userId, String pid, PageDTO page) {
 
-		Page<UserFileEntity> userFilePage = userFileRepository.findAllByUserIdAndPidAndDelete(userId, pid, false, page.buildPageRequest());
-
+		Page<UserFileEntity> userFilePage = userFileRepository.findAllByUserIdAndPidAndDeleteOrderByDirDesc(userId, pid, false, page.buildPageRequest());
 		return pageToVO(userFilePage);
 	}
 

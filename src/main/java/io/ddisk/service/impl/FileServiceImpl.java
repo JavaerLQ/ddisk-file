@@ -14,7 +14,6 @@ import io.ddisk.domain.entity.ThumbnailEntity;
 import io.ddisk.domain.entity.UserFileEntity;
 import io.ddisk.domain.enums.RoleEnum;
 import io.ddisk.domain.enums.ThumbnailTypeEnum;
-import io.ddisk.domain.vo.UploadFileVO;
 import io.ddisk.eventbus.SystemDataBus;
 import io.ddisk.eventbus.event.SyncLockEvent;
 import io.ddisk.exception.BizException;
