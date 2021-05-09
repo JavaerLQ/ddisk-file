@@ -64,7 +64,7 @@ public class UserController {
 
 		LoginUser user = SpringWebUtils.requireLogin();
 		userService.setAvator(user.getId(), fileId);
-		user.setImgUrl(String.valueOf(fileId));
+		user.setImgUrl(fileId);
 		return ResponseEntity.ok().build();
 	}
 

@@ -1,6 +1,7 @@
 package io.ddisk.domain.entity;
 
 import io.ddisk.domain.enums.ThumbnailTypeEnum;
+import io.ddisk.utils.UUIDUtil;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
@@ -24,9 +25,7 @@ public class ThumbnailEntity {
 
 	@Id
 	@Column(name = "thumbnail_id")
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	@GenericGenerator(name = "native", strategy = "native")
-	private Long id;
+	private String id = UUIDUtil.random32();
 
 	/**
 	 * 真实文件{@code FileEntity.id}
