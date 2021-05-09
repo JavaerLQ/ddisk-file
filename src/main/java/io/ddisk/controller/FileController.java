@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +45,7 @@ public class FileController {
 	@Parameters({
 			@Parameter(name = "pid", description = "用户文件目录id，需要登录用户的文件", required = true)
 	})
-	public ResponseEntity<PageVO<FileVO>> getFileList(@NotNull PageDTO page, @NotBlank @Length(min = 32, max = 32) @RequestParam(required = false) String pid) {
+	public ResponseEntity<PageVO<FileVO>> getFileList(@NotNull PageDTO page, @Length(min = 32, max = 32) @RequestParam(required = false) String pid) {
 
 		LoginUser user = SpringWebUtils.requireLogin();
 		PageVO<FileVO> fileListPage = userFileService.listTheDir(user.getId(), pid, page);
@@ -132,7 +133,7 @@ public class FileController {
 			@Parameter(name = "name", description = "目录名", required = true),
 
 	})
-	public ResponseEntity<Void> mkdir(@RequestParam(required = false) @NotBlank @Length(min = 32, max = 32) String pid, @NotBlank String name) {
+	public ResponseEntity<Void> mkdir(@RequestParam(required = false) @Length(min = 32, max = 32) String pid, @NotBlank String name) {
 		LoginUser user = SpringWebUtils.requireLogin();
 		userFileService.mkdir(user.getId(), pid, name);
 		return ResponseEntity.ok().build();

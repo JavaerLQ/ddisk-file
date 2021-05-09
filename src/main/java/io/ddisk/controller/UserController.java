@@ -60,7 +60,7 @@ public class UserController {
 	@Parameters({
 			@Parameter(name = "fileId", description = "用户文件id", required = true)
 	})
-	public ResponseEntity<Void> setAvator(String fileId) {
+	public ResponseEntity<Void> setAvator(@NotBlank @Length(min = 32, max = 32) String fileId) {
 
 		LoginUser user = SpringWebUtils.requireLogin();
 		userService.setAvator(user.getId(), fileId);

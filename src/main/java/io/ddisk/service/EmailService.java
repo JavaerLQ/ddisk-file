@@ -13,7 +13,7 @@ public interface EmailService {
 	 * @param subject
 	 * @param content
 	 */
-	public void sendSimpleMail(String to,String subject,String content);
+	void sendSimpleMail(String to,String subject,String content);
 
 	/**
 	 * 发送HTML邮件的方法
@@ -21,5 +21,5 @@ public interface EmailService {
 	 * @param subject
 	 * @param content
 	 */
-	public void sendHtmlMail(String to ,String subject,String content) throws MessagingException;
+	void sendHtmlMail(String to ,String subject,String content) throws MessagingException;
 }

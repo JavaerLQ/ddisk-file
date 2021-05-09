@@ -64,7 +64,6 @@ public interface UserStorageService {
 	/**
 	 * 用户必须已登录
 	 * 减少用户已使用空间
-	 * @param user
 	 * @param size
 	 * @return
 	 */

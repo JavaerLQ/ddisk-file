@@ -21,7 +21,8 @@ public class UploadFileVO {
 	private Boolean needMerge;
 	@Schema(description = "跳过上传", example = "true")
 	private Boolean skipUpload;
-	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	@Schema(description = "已经上传的分片", example = "[1,2,3]")
 	private Collection<Integer> uploaded;
+
+	private int[] demos;
 }

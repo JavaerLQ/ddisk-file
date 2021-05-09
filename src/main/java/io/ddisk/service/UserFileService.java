@@ -123,7 +123,7 @@ public interface UserFileService {
 	 * @param userId
 	 * @return
 	 */
-	public Map<String, PathNodeVO> getPathTreeMap(Long userId);
+	Map<String, PathNodeVO> getPathTreeMap(Long userId);
 
 	/**
 	 * 搜索文件

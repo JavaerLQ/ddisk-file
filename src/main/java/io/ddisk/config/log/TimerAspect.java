@@ -1,4 +1,4 @@
-package io.ddisk.config.advice;
+package io.ddisk.config.log;
 
 /**
  * @Author: Richard.Lee
@@ -18,29 +18,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class TimerAspect {
 
-	private final long SEC3 = 3000L;
-	private final long SEC2 = 2000L;
-	private final long SEC1 = 1000L;
-
-	@Pointcut("execution(* io.ddisk.service..*.*(..))")
-	public void serviceTimer() { }
-
 	@Pointcut("execution(* io.ddisk.dao.*.*(..))")
 	public void sqlTimer(){}
-
-	@Around("serviceTimer()")
-	public Object serviceTimeLog(ProceedingJoinPoint joinPoint) throws Throwable {
-		// 记录起始时间
-		long begin = System.currentTimeMillis();
-		// 执行目标方法
-		Object result = joinPoint.proceed();
-		// 记录操作时间
-		long ms = System.currentTimeMillis() - begin;
-		if (ms >= SEC3){
-			log.warn("{} 执行时间为: {}毫秒", joinPoint.getSignature(), ms);
-		}
-		return result;
-	}
 
 	@Around("sqlTimer()")
 	public Object daoTimeLog(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -50,7 +29,7 @@ public class TimerAspect {
 		Object result = joinPoint.proceed();
 		// 记录操作时间
 		long ms = System.currentTimeMillis() - begin;
-		if (ms >= SEC1){
+		if (ms >= 500L){
 			log.warn("{} 执行时间为: {}毫秒", joinPoint.getSignature(), ms);
 		}
 		return result;

@@ -57,8 +57,8 @@ public class FileTransferController {
     public ResponseEntity<UploadFileVO> uploadChunk(@Validated FileUploadDTO fileUploadDto) {
 
         LoginUser user = SpringWebUtils.requireLogin();
-        Collection<Integer> upload = fileService.upload(user.getId(), fileUploadDto);
-        return ResponseEntity.ok().body(UploadFileVO.builder().needMerge(upload.size()==fileUploadDto.getTotalChunks()).uploaded(upload).build());
+        Collection<Integer> uploaded = fileService.upload(user.getId(), fileUploadDto);
+        return ResponseEntity.ok().body(UploadFileVO.builder().needMerge(uploaded.size()==fileUploadDto.getTotalChunks()).uploaded(uploaded).build());
     }
 
     @Operation(summary = "下载文件", description = "文件下载接口，保证文件安全，阻止非法用户下载")
