@@ -23,6 +23,4 @@ public class UploadFileVO {
 	private Boolean skipUpload;
 	@Schema(description = "已经上传的分片", example = "[1,2,3]")
 	private Collection<Integer> uploaded;
-
-	private int[] demos;
 }
