@@ -69,7 +69,7 @@ public class FileServiceImpl implements FileService {
 	 * @return
 	 */
 	@Override
-	public UploadFileVO speedUpload(Long userId, FileUploadDTO fileUploadDTO) {
+	public FileEntity speedUpload(Long userId, FileUploadDTO fileUploadDTO) {
 
 		FileEntity fileEntity = fileRepository.findById(fileUploadDTO.getIdentifier()).orElse(null);
 
@@ -85,7 +85,7 @@ public class FileServiceImpl implements FileService {
 			increaseCount(fileEntity);
 		}
 
-		return UploadFileVO.builder().skipUpload(Objects.nonNull(fileEntity)).build();
+		return fileEntity;
 	}
 
 	/**

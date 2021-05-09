@@ -20,7 +20,7 @@ public interface FileService {
 	 * @param fileUploadDTO
 	 * @return
 	 */
-	UploadFileVO speedUpload(Long userId, FileUploadDTO fileUploadDTO);
+	FileEntity speedUpload(Long userId, FileUploadDTO fileUploadDTO);
 
 	/**
 	 * 文件上传

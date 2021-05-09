@@ -2,8 +2,10 @@ package io.ddisk.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Collection;
 
@@ -13,7 +15,8 @@ import java.util.Collection;
  * @Date: created by 2021/3/16
  */
 @Data
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(name = "文件上传VO",required = true)
 public class UploadFileVO {
 

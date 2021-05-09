@@ -3,6 +3,7 @@ package io.ddisk.controller;
 import io.ddisk.domain.dto.FileDTO;
 import io.ddisk.domain.dto.FileUploadDTO;
 import io.ddisk.domain.dto.MergeFileDTO;
+import io.ddisk.domain.entity.FileEntity;
 import io.ddisk.domain.vo.LoginUser;
 import io.ddisk.domain.vo.UploadFileVO;
 import io.ddisk.service.FileService;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotBlank;
 import java.util.Collection;
+import java.util.Objects;
 
 
 /**
@@ -47,8 +49,8 @@ public class FileTransferController {
     @ResponseBody
     public ResponseEntity<UploadFileVO> uploadFileSpeed(@Validated FileUploadDTO fileUploadDto){
         LoginUser user = SpringWebUtils.requireLogin();
-        UploadFileVO vo = fileService.speedUpload(user.getId(), fileUploadDto);
-        return ResponseEntity.ok(vo);
+        FileEntity fileEntity = fileService.speedUpload(user.getId(), fileUploadDto);
+        return ResponseEntity.ok(new UploadFileVO(false, Objects.nonNull(fileEntity), null));
     }
 
 
@@ -58,7 +60,7 @@ public class FileTransferController {
 
         LoginUser user = SpringWebUtils.requireLogin();
         Collection<Integer> uploaded = fileService.upload(user.getId(), fileUploadDto);
-        return ResponseEntity.ok().body(UploadFileVO.builder().needMerge(uploaded.size()==fileUploadDto.getTotalChunks()).uploaded(uploaded).build());
+        return ResponseEntity.ok(new UploadFileVO(uploaded.size()==fileUploadDto.getTotalChunks(), false, uploaded));
     }
 
     @Operation(summary = "下载文件", description = "文件下载接口，保证文件安全，阻止非法用户下载")
