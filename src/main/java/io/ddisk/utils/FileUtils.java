@@ -288,7 +288,6 @@ public class FileUtils {
 			log.warn(String.format("用户[%s]停止[ %s ]下载：%d-%d", username, filename, startByte, endByte));
 			//捕获此异常表示拥护停止下载
 		} catch (IOException e) {
-			e.printStackTrace();
 			log.info(String.format("用户[%s]下载[ %s ]IO异常，Message：{}", filename, e.getLocalizedMessage()));
 		}
 	}
